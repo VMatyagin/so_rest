@@ -83,7 +83,15 @@ class BoecSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Boec
-        fields = ("id", "firstName", "lastName", "middleName", "DOB", "fullName")
+        fields = (
+            "id",
+            "firstName",
+            "lastName",
+            "middleName",
+            "DOB",
+            "fullName",
+            "vkId",
+        )
         read_only_fields = ("id", "fullName")
 
 

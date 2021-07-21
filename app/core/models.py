@@ -596,6 +596,7 @@ class Achievement(models.Model):
     created_at = models.DateField(default=timezone.now)
 
     title = models.TextField(max_length=255)
+    description = models.TextField(max_length=255)
 
     goal = models.IntegerField(verbose_name="Цель")
 

@@ -3,6 +3,8 @@ from datetime import datetime
 
 from core.authentication import VKAuthentication
 from core.models import (
+    Achievement,
+    Activity,
     Area,
     Boec,
     Brigade,
@@ -134,37 +136,28 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
         )
 
 
-def generateBoecProgess(pk):
-    try:
-        boec = Boec.objects.get(id=pk)
+def generateBoecProgress(boec):
+    event_participant = boec.event_participation.filter(isApproved=True)
+    participation_default = event_participant.filter(worth=0).count()
+    participation_volonteer = event_participant.filter(worth=1).count()
+    participation_organizer = event_participant.filter(worth=2).count()
 
-        event_participant = boec.event_participation.filter(isApproved=True)
-        participation_default = event_participant.filter(worth=0).count()
-        participation_volonteer = event_participant.filter(worth=1).count()
-        participation_organizer = event_participant.filter(worth=2).count()
+    competition_participant = boec.competition_participation.filter(
+        competition__ratingless=False
+    )
 
-        competition_participant = boec.competition_participation.filter(
-            competition__ratingless=False
-        )
+    # просто подача заявок вместе с победами
+    competition_default = competition_participant.count()
+    competition_playoff = competition_participant.filter(worth=1).count()
 
-        # просто подача заявок вместе с победами
-        competition_default = competition_participant.count()
-        competition_playoff = competition_participant.filter(worth=1).count()
+    with_nomination = competition_participant.filter(worth=1, nomination__isnull=False)
 
-        with_nomination = competition_participant.filter(
-            worth=1, nomination__isnull=False
-        )
+    nominations_count = with_nomination.count()
 
-        nominations_count = with_nomination.count()
+    sport_wins = with_nomination.filter(competition__event__worth=2).count()
+    art_wins = with_nomination.filter(competition__event__worth=1).count()
 
-        sport_wins = with_nomination.filter(competition__event__worth=2).count()
-        art_wins = with_nomination.filter(competition__event__worth=1).count()
-
-        seasons = boec.seasons.filter(isCandidate=False, isAccepted=True).count()
-
-    except (Boec.DoesNotExist, ValidationError):
-        msg = _("Boec doesnt exists.")
-        raise ValidationError({"error": msg}, code="validation")
+    seasons = boec.seasons.filter(isCandidate=False, isAccepted=True).count()
 
     return {
         "participation_count": participation_default,
@@ -179,6 +172,23 @@ def generateBoecProgess(pk):
     }
 
 
+def refreshBoecAchievements(boec):
+    progress = generateBoecProgress(boec)
+    achievements = Achievement.objects.all()
+
+    for ach in achievements:
+        user_progress = progress.get(ach.type, 0)
+
+        # если достижение еще не выдано юзеру, то выдаем и генерим уведомление
+        # и обновляем счетчик
+        if user_progress >= ach.goal and not ach.boec.filter(id=boec.id).exists():
+            ach.boec.add(boec)
+            Activity.objects.create(type=2, boec=boec, achievement=ach)
+            boec.unreadActivityCount += 1
+
+    boec.save()
+
+
 class BoecProgress(RevisionMixin, viewsets.ViewSet):
     serializer_class = ActivitySerailizer
     authentication_classes = (VKAuthentication,)
@@ -186,7 +196,17 @@ class BoecProgress(RevisionMixin, viewsets.ViewSet):
     pagination_class = None
 
     def list(self, request, boec_pk=None):
-        progress = generateBoecProgess(pk=boec_pk)
+        if boec_pk == None:
+            user = request.user
+            boec = Boec.objects.get(vkId=user.vkId)
+        else:
+            try:
+                boec = Boec.objects.get(id=boec_pk)
+            except (Boec.DoesNotExist, ValidationError):
+                msg = _("Boec doesnt exists.")
+                raise ValidationError({"error": msg}, code="validation")
+
+        progress = generateBoecProgress(boec=boec)
         return Response(progress)
 
 

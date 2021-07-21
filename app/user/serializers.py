@@ -1,3 +1,5 @@
+import logging
+
 from core.auth_backend import PasswordlessAuthBackend
 from core.models import Achievement, Activity, Boec, Brigade, Shtab, Warning
 from core.serializers import DynamicFieldsModelSerializer
@@ -5,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers, status
 from so.serializers import BoecInfoSerializer, BrigadeSerializer, ShtabSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -127,9 +131,49 @@ class WarningSerailizer(DynamicFieldsModelSerializer):
 class AchievementSerailizer(DynamicFieldsModelSerializer):
     """serializer for Achievement"""
 
+    achieved_at = serializers.SerializerMethodField("check_status")
+
+    def check_status(self, obj):
+        request = self.context.get("request")
+        if request:
+            boecId = self.context["request"].query_params.get("boecId", None)
+
+            if boecId == None:
+                user = request.user
+                boec = Boec.objects.get(vkId=user.vkId)
+            else:
+                try:
+                    boec = Boec.objects.get(id=boecId)
+                except (Boec.DoesNotExist):
+                    msg = _("Boec not found")
+                    raise serializers.ValidationError({"error": msg})
+
+            isAchieved = obj.boec.filter(id=boec.id).exists()
+            if not isAchieved:
+                return None
+
+            try:
+                activity = Activity.objects.get(boec=boec, achievement=obj)
+
+            except (Activity.DoesNotExist):
+                msg = _("Activity not found")
+                raise serializers.ValidationError({"error": msg})
+
+            return activity.created_at
+
+        return None
+
     class Meta:
         model = Achievement
-        fields = ("id", "type", "created_at", "title", "goal")
+        fields = (
+            "id",
+            "type",
+            "created_at",
+            "title",
+            "goal",
+            "achieved_at",
+            "description",
+        )
 
 
 class ActivitySerailizer(DynamicFieldsModelSerializer):

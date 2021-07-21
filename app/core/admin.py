@@ -156,6 +156,10 @@ class AchievementsAdmin(CompareVersionAdmin, admin.ModelAdmin):
     pass
 
 
+class WarningAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Shtab, ShtabAdmin)
 admin.site.register(models.Area, AreaAdmin)
@@ -173,3 +177,4 @@ admin.site.register(models.Ticket, TicketAdmin)
 admin.site.register(models.TicketScan, TicketScanAdmin)
 admin.site.register(models.Achievement, AchievementsAdmin)
 admin.site.register(models.Activity, ActivityAdmin)
+admin.site.register(models.Warning, WarningAdmin)

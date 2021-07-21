@@ -1,5 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
+from so.views import BoecProgress
 from user import views
 
 app_name = "user"
@@ -14,4 +15,10 @@ urlpatterns = [
         views.ActivityView.as_view({"post": "markAsRead"}),
         name="activity",
     ),
+    path(
+        "me/achievements/",
+        views.AchievementsView.as_view({"get": "list"}),
+        name="achievements",
+    ),
+    path("me/progress/", BoecProgress.as_view({"get": "list"}), name="progress"),
 ]

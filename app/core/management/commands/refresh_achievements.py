@@ -1,8 +1,6 @@
-import json
-
-from core.models import Achievement, Activity, Boec, Brigade, Season, User
+from core.models import Boec, User
 from django.core.management.base import BaseCommand
-from so.views import generateBoecProgess
+from so.views import refreshBoecAchievements
 
 
 class Command(BaseCommand):
@@ -17,20 +15,4 @@ class Command(BaseCommand):
             except (Boec.DoesNotExist):
                 continue
 
-            progress = generateBoecProgess(pk=boec.id)
-
-            achievements = Achievement.objects.all()
-
-            for ach in achievements:
-                user_progress = progress.get(ach.type, 0)
-
-                # если достижение еще не выдано юзеру, то выдаем и генерим уведомление
-                if (
-                    user_progress >= ach.goal
-                    and not ach.boec.filter(id=boec.id).exists()
-                ):
-                    ach.boec.add(boec)
-                    Activity.objects.create(type=2, boec=boec, achievement=ach)
-                    boec.unreadActivityCount += 1
-
-            boec.save()
+            refreshBoecAchievements(boec=boec)

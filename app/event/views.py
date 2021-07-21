@@ -3,7 +3,7 @@ from threading import Thread
 
 from core import models
 from core.authentication import VKAuthentication
-from core.models import Season, UsedTicketScanException
+from core.models import CompetitionParticipant, Season, UsedTicketScanException
 from core.utils.sheets import EventReportGenerator, EventsRatingGenerator
 from django.core.exceptions import ValidationError
 from event import serializers
@@ -12,6 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from reversion.views import RevisionMixin
+from so.views import refreshBoecAchievements
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,27 @@ class EventViewSet(
             queryset = queryset.filter(visibility=True)
 
         return queryset
+
+    def iterate_over_boecs(event):
+        for boec in event.event_participation.all():
+            refreshBoecAchievements(boec=boec)
+
+        competitions_participants = CompetitionParticipant.objects.filter(
+            competition__event=event, competition__ratingless=False
+        )
+        for item in competitions_participants.all():
+            for boec in item.boec.all():
+                refreshBoecAchievements(boec=boec)
+
+    def perform_update(self, serializer):
+        event = self.get_object()
+        status = serializer.validated_data["status"]
+
+        if status == 1:
+
+            Thread(target=self.iterate_over_boecs, args=(event,)).start()
+
+        return super().perform_update(serializer)
 
     @action(
         methods=["post"],

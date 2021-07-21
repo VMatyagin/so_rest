@@ -58,8 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
             boec_obj = Boec.objects.get(vkId=obj.vkId)
             serializer = BoecInfoSerializer(boec_obj)
         except (Boec.DoesNotExist):
-            msg = _("Boec not found")
-            raise serializers.ValidationError({"error": msg})
+            return None
         return serializer.data
 
     def get_boec_unreadActivityCount(self, obj):
@@ -67,8 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
             boec_obj = Boec.objects.get(vkId=obj.vkId)
             return boec_obj.unreadActivityCount
         except (Boec.DoesNotExist):
-            msg = _("Boec not found")
-            raise serializers.ValidationError({"error": msg})
+            return 0
 
     class Meta:
         model = get_user_model()

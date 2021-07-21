@@ -75,7 +75,8 @@ class ActivityView(RevisionMixin, viewsets.GenericViewSet):
         try:
             boec = Boec.objects.get(vkId=self.request.user.vkId)
             Activity.objects.filter(boec=boec, seen=False).update(seen=True)
-
+            boec.unreadActivityCount = 0
+            boec.save()
         except (Boec.DoesNotExist, ValidationError):
             msg = _("Boec doesnt exists.")
             raise ValidationError({"error": msg}, code="validation")
@@ -96,7 +97,7 @@ class AchievementsView(RevisionMixin, viewsets.GenericViewSet):
         queryset = (
             self.filter_queryset(self.get_queryset())
             .annotate(q_count=Count("boec"))
-            .order_by("-q_count")
+            .order_by("-q_count", "-created_at")
         )
 
         page = self.paginate_queryset(queryset)

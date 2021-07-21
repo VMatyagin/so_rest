@@ -539,6 +539,9 @@ class Warning(models.Model):
 
     text = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.text
+
 
 @reversion.register()
 class Achievement(models.Model):
@@ -630,7 +633,7 @@ class Activity(models.Model):
         related_name="activities",
     )
 
-    created_at = models.DateField(default=timezone.now)
+    created_at = AutoDateTimeField(default=timezone.now)
 
     warning = models.ForeignKey(
         Warning,

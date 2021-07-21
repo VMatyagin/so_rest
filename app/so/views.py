@@ -137,7 +137,9 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
 
 
 def generateBoecProgress(boec):
-    event_participant = boec.event_participation.filter(isApproved=True)
+    event_participant = boec.event_participation.filter(
+        isApproved=True, event__status=1
+    )
     participation_default = event_participant.filter(worth=0).count()
     participation_volonteer = event_participant.filter(worth=1).count()
     participation_organizer = event_participant.filter(worth=2).count()

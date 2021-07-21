@@ -1,9 +1,19 @@
 import logging
 from threading import Thread
 
-from core import models
 from core.authentication import VKAuthentication
-from core.models import CompetitionParticipant, Season, UsedTicketScanException
+from core.models import (
+    Activity,
+    Competition,
+    CompetitionParticipant,
+    Event,
+    Nomination,
+    Participant,
+    Season,
+    Ticket,
+    UsedTicketScanException,
+    Warning,
+)
 from core.utils.sheets import EventReportGenerator, EventsRatingGenerator
 from django.core.exceptions import ValidationError
 from event import serializers
@@ -37,7 +47,7 @@ class EventViewSet(
     """manage events in the database"""
 
     serializer_class = serializers.EventSerializer
-    queryset = models.Event.objects.all()
+    queryset = Event.objects.all()
     authentication_classes = (VKAuthentication,)
     permission_classes = (IsAuthenticated,)
 
@@ -87,7 +97,7 @@ class EventViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def generateReport(self, request, pk):
-        event = models.Event.objects.get(id=pk)
+        event = Event.objects.get(id=pk)
         reporter = EventReportGenerator("1s_NVTmYxG5GloDaOOw4d7eh7P_zAcobTmIRseYHsg3g")
         Thread(target=reporter.create, args=[event]).start()
 
@@ -102,7 +112,7 @@ class EventViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def generate_tickets(self, request, pk):
-        event = models.Event.objects.get(id=pk)
+        event = Event.objects.get(id=pk)
         if not event.isTicketed:
             raise ValueError(f"Event {event} is not ticketed")
 
@@ -140,7 +150,7 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
         worth = self.request.query_params.get("worth", None)
         brigadeId = self.request.query_params.get("brigadeId", None)
         status = self.request.query_params.get("status", "approved")
-        queryset = models.Participant.objects.filter(event=self.kwargs["event_pk"])
+        queryset = Participant.objects.filter(event=self.kwargs["event_pk"])
 
         if self.request.method == "GET" and status == "approved":
             queryset = queryset.filter(isApproved=True)
@@ -162,7 +172,7 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
 
     def perform_create(self, serializer):
         eventId = self.kwargs["event_pk"]
-        event = models.Event.objects.get(id=eventId)
+        event = Event.objects.get(id=eventId)
         worth = serializer.validated_data["worth"]
 
         isApproved = serializer.validated_data.get("isApproved", False)
@@ -192,9 +202,16 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
         authentication_classes=(VKAuthentication,),
     )
     def approve(self, request, pk, **kwargs):
-        participant = models.Participant.objects.get(id=pk)
+        participant = Participant.objects.get(id=pk)
         participant.isApproved = True
         participant.save()
+
+        # TODO не создавать отдельные варнинги юзерам
+        text = f"Ваша заявка на мероприятие {participant.event} одобрена"
+        warning = Warning.objects.create(text=text)
+        Activity.objects.create(type=0, boec=participant.boec, warning=warning)
+        participant.boec.unreadActivityCount += 1
+        participant.boec.save()
 
         return Response({})
 
@@ -207,9 +224,16 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
         authentication_classes=(VKAuthentication,),
     )
     def unapprove(self, request, pk, **kwargs):
-        participant = models.Participant.objects.get(id=pk)
+        participant = Participant.objects.get(id=pk)
         participant.isApproved = False
         participant.save()
+
+        # TODO не создавать отдельные варнинги юзерам
+        text = f"Ваша заявка на мероприятие {participant.event} отклонена"
+        warning = Warning.objects.create(text=text)
+        Activity.objects.create(type=1, boec=participant.boec, warning=warning)
+        participant.boec.unreadActivityCount += 1
+        participant.boec.save()
 
         return Response({})
 
@@ -228,8 +252,8 @@ class EventCompetitionListCreate(
 
     def get_queryset(self):
         if "event_pk" in self.kwargs:
-            return models.Competition.objects.filter(event=self.kwargs["event_pk"])
-        return models.Competition.objects.all()
+            return Competition.objects.filter(event=self.kwargs["event_pk"])
+        return Competition.objects.all()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -240,7 +264,7 @@ class EventCompetitionListCreate(
     def perform_create(self, serializer):
         if "event_pk" in self.kwargs:
             eventId = self.kwargs["event_pk"]
-            event = models.Event.objects.get(id=eventId)
+            event = Event.objects.get(id=eventId)
             serializer.save(event=event)
         else:
             super().perform_create(serializer)
@@ -258,7 +282,7 @@ class EventCompetitionRetrieveUpdateDestroy(
     serializer_class = serializers.CompetitionSerializer
     authentication_classes = (VKAuthentication,)
     permission_classes = [IsAuthenticated]
-    queryset = models.Competition.objects.all()
+    queryset = Competition.objects.all()
 
 
 class EventCompetitionParticipants(RevisionMixin, viewsets.ModelViewSet):
@@ -269,7 +293,7 @@ class EventCompetitionParticipants(RevisionMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = models.CompetitionParticipant.objects.all()
+        queryset = CompetitionParticipant.objects.all()
         worth = self.request.query_params.get("worth", None)
         if "competition_pk" in self.kwargs:
             queryset = queryset.filter(competition=self.kwargs["competition_pk"])
@@ -302,7 +326,7 @@ class EventCompetitionParticipants(RevisionMixin, viewsets.ModelViewSet):
                 code="validation",
             )
         competitionId = self.kwargs["competition_pk"]
-        competition = models.Competition.objects.get(id=competitionId)
+        competition = Competition.objects.get(id=competitionId)
         serializer.save(competition=competition)
 
 
@@ -314,7 +338,7 @@ class NominationView(RevisionMixin, viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = models.Nomination.objects.all()
+        queryset = Nomination.objects.all()
         if "competition_pk" in self.kwargs:
             queryset = queryset.filter(competition=self.kwargs["competition_pk"])
         return queryset
@@ -335,7 +359,7 @@ class NominationView(RevisionMixin, viewsets.ModelViewSet):
                 code="validation",
             )
         competitionId = self.kwargs["competition_pk"]
-        competition = models.Competition.objects.get(id=competitionId)
+        competition = Competition.objects.get(id=competitionId)
         serializer.save(competition=competition)
 
     def perform_destroy(self, instance):
@@ -361,7 +385,7 @@ class TicketViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        queryset = models.Ticket.objects.all()
+        queryset = Ticket.objects.all()
         return queryset
 
     @action(
@@ -373,7 +397,7 @@ class TicketViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def scan(self, request, pk):
-        ticket = models.Ticket.objects.get(id=pk)
+        ticket = Ticket.objects.get(id=pk)
         previous_scan = ticket.last_scan()
         try:
             ticket.scan()
@@ -397,7 +421,7 @@ class TicketViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def unscan(self, request, pk):
-        ticket = models.Ticket.objects.get(id=pk)
+        ticket = Ticket.objects.get(id=pk)
         if not ticket.is_used:
             raise ValueError("Ticket never actually used")
         last_valid_scan = ticket.last_valid_scan()

@@ -2,6 +2,7 @@ from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 from rest_framework_nested import routers
 from so import views
+from so.views import BoecTelegramView, BoecViewSet
 
 router = SimpleRouter()
 
@@ -36,4 +37,9 @@ urlpatterns = [
     path("", include(brigade_router.urls)),
     path("", include(shtab_router.urls)),
     path("", include(boec_router.urls)),
+    path(
+        "telegram_link",
+        BoecTelegramView.as_view({"post": "telegram_link"}),
+        name="telegram_link",
+    ),
 ]

@@ -11,8 +11,8 @@ from rest_framework.settings import api_settings
 from reversion.views import RevisionMixin
 from so import serializers
 from user.serializers import (
-    AchievementSerailizer,
-    ActivitySerailizer,
+    AchievementSerializer,
+    ActivitySerializer,
     AuthTokenSerializer,
     UserSerializer,
 )
@@ -40,7 +40,7 @@ class ManangeUserView(generics.RetrieveAPIView):
 class ActivityView(RevisionMixin, viewsets.GenericViewSet):
     """manage the activities"""
 
-    serializer_class = ActivitySerailizer
+    serializer_class = ActivitySerializer
     authentication_classes = (VKAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Activity.objects.all()
@@ -57,7 +57,7 @@ class ActivityView(RevisionMixin, viewsets.GenericViewSet):
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
                 return self.get_paginated_response(serializer.data)
-            serializer = ActivitySerailizer(activities, many=True)
+            serializer = ActivitySerializer(activities, many=True)
         except (Boec.DoesNotExist, ValidationError):
             msg = _("Boec doesnt exists.")
             raise ValidationError({"error": msg}, code="validation")
@@ -91,7 +91,7 @@ class AchievementsView(RevisionMixin, viewsets.GenericViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = None
     queryset = Achievement.objects.all()
-    serializer_class = AchievementSerailizer
+    serializer_class = AchievementSerializer
 
     def list(self, request, *args, **kwargs):
         queryset = (

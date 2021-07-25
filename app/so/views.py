@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from reversion.views import RevisionMixin
 from so import serializers
-from user.serializers import ActivitySerailizer
+from user.serializers import ActivitySerializer
 
 
 class ShtabViewSet(RevisionMixin, viewsets.ModelViewSet):
@@ -192,7 +192,7 @@ def refreshBoecAchievements(boec):
 
 
 class BoecProgress(RevisionMixin, viewsets.ViewSet):
-    serializer_class = ActivitySerailizer
+    serializer_class = ActivitySerializer
     authentication_classes = (VKAuthentication,)
     permission_classes = (IsAuthenticated,)
     pagination_class = None

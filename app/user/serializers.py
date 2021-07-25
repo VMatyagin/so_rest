@@ -118,7 +118,7 @@ class AuthTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class WarningSerailizer(DynamicFieldsModelSerializer):
+class WarningSerializer(DynamicFieldsModelSerializer):
     """serializer for Warning"""
 
     class Meta:
@@ -126,7 +126,7 @@ class WarningSerailizer(DynamicFieldsModelSerializer):
         fields = ("id", "text")
 
 
-class AchievementSerailizer(DynamicFieldsModelSerializer):
+class AchievementSerializer(DynamicFieldsModelSerializer):
     """serializer for Achievement"""
 
     achieved_at = serializers.SerializerMethodField("check_status")
@@ -174,11 +174,11 @@ class AchievementSerailizer(DynamicFieldsModelSerializer):
         )
 
 
-class ActivitySerailizer(DynamicFieldsModelSerializer):
+class ActivitySerializer(DynamicFieldsModelSerializer):
     """serializer for Activity"""
 
-    warning = WarningSerailizer()
-    achievement = AchievementSerailizer()
+    warning = WarningSerializer()
+    achievement = AchievementSerializer()
 
     class Meta:
         model = Activity

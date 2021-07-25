@@ -132,6 +132,9 @@ class Boec(models.Model):
     updated_at = AutoDateTimeField(default=timezone.now)
     vkId = models.IntegerField(verbose_name="VK id", blank=True, null=True, unique=True)
     unreadActivityCount = models.IntegerField(default=0)
+    telegram_id = models.IntegerField(
+        verbose_name="Telegram ID", null=True, unique=True
+    )
 
     def __str__(self):
         return f"{self.lastName} {self.firstName} {self.middleName}"

@@ -72,12 +72,12 @@ class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
             if boec.telegram_id != telegram_id:
                 boec.telegram_id = telegram_id
                 boec.save()
-                return Response(serializers.BoecTelegramSerializer(boec).data)
-            else:
                 return Response(
                     serializers.BoecTelegramSerializer(boec).data,
-                    status=status.HTTP_204_NO_CONTENT,
+                    status=status.HTTP_201_CREATED,
                 )
+            else:
+                return Response(serializers.BoecTelegramSerializer(boec).data)
         except Boec.DoesNotExist:
             msg = _(f"Boec with VK ID = {vk_id} doesn't exist")
             return Response({"error": msg}, status=status.HTTP_404_NOT_FOUND)

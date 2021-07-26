@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+import os
 
 from core.authentication import VKAuthentication
 from core.models import (
@@ -18,11 +18,12 @@ from core.models import (
 from django.http import JsonResponse
 from django.utils.translation import ugettext_lazy as _
 from event.serializers import ParticipantHistorySerializer, ParticipantSerializer
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from reversion.views import RevisionMixin
 from so import serializers
 from user.serializers import ActivitySerializer
@@ -62,11 +63,18 @@ class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
         detail=True,
     )
     def telegram_link(self, request, vk_id: int, telegram_id: int):
+        if request.headers["X-Bot-Token"] != os.getenv("BOT_AUTH_TOKEN"):
+            return Response(
+                {"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
+            )
         try:
             boec = Boec.objects.get(vkId=vk_id)
-            boec.telegram_id = telegram_id
-            boec.save()
-            return Response(serializers.BoecTelegramSerializer(boec).data)
+            if boec.telegram_id != telegram_id:
+                boec.telegram_id = telegram_id
+                boec.save()
+                return Response(serializers.BoecTelegramSerializer(boec).data)
+            else:
+                return Response(status=status.HTTP_204_NO_CONTENT)
         except Boec.DoesNotExist:
             msg = _(f"Boec with VK ID = {vk_id} doesn't exist")
             return Response({"error": msg}, status=status.HTTP_404_NOT_FOUND)

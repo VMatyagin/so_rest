@@ -73,6 +73,23 @@ class SeasonSerializer(DynamicFieldsModelSerializer):
         read_only_fields = ("id", "brigade", "boec")
 
 
+class BoecTelegramSerializer(serializers.ModelSerializer):
+    "Serializer for boec objects for Telegram interaction"
+    fullName = serializers.SerializerMethodField("get_full_name")
+
+    def get_full_name(self, obj):
+        return f"{obj.lastName} {obj.firstName} {obj.middleName}"
+
+    class Meta:
+        model = Boec
+        fields = (
+            "id",
+            "fullName",
+            "vkId",
+        )
+        read_only_fields = ("id", "fullName")
+
+
 class BoecSerializer(serializers.ModelSerializer):
     """serializer for boec objects"""
 

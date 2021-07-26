@@ -15,9 +15,10 @@ from core.models import (
     Season,
     Shtab,
 )
+from django.http import JsonResponse
 from django.utils.translation import ugettext_lazy as _
 from event.serializers import ParticipantHistorySerializer, ParticipantSerializer
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -53,25 +54,24 @@ class AreaViewSet(RevisionMixin, viewsets.ModelViewSet):
         return self.queryset
 
 
-class BoecTelegramView(RevisionMixin, viewsets.ModelViewSet):
+class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
     "Manage telegram links for boec in the db"
-    queryset = Boec.objects.all()
-    serializer_class = serializers.BoecSerializer
 
     @action(
-        methods=["post"],
+        methods=["put"],
         detail=True,
-        # permission_classes=(IsAuthenticated, IsAdminUser),
-        # authentication_classes=(VKAuthentication,),
     )
-    def telegram_link(self, request):
+    def telegram_link(self, request, vk_id: int, telegram_id: int):
         try:
-            boec = Boec.objects.get(vkId=self.request.query_params["vk_id"])
-            boec.telegram_id = self.request.query_params["telegram_id"]
+            boec = Boec.objects.get(vkId=vk_id)
+            boec.telegram_id = telegram_id
             boec.save()
-            return Response(serializers.BoecSerializer(boec).data)
-        except (Boec.DoesNotExist, ValidationError):
-            msg = _("Boec doesnt exists.")
+            return Response(serializers.BoecTelegramSerializer(boec).data)
+        except Boec.DoesNotExist:
+            msg = _(f"Boec with VK ID = {vk_id} doesn't exist")
+            return Response({"error": msg}, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            msg = _(f"Validation error: {e.detail}")
             raise ValidationError({"error": msg}, code="validation")
 
 

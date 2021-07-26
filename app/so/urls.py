@@ -38,8 +38,8 @@ urlpatterns = [
     path("", include(shtab_router.urls)),
     path("", include(boec_router.urls)),
     path(
-        "telegram_link",
-        BoecTelegramView.as_view({"post": "telegram_link"}),
+        "telegram_link/<int:vk_id>/<int:telegram_id>",
+        BoecTelegramView.as_view({"put": "telegram_link"}),
         name="telegram_link",
     ),
 ]

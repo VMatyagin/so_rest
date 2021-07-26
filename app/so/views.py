@@ -74,7 +74,10 @@ class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
                 boec.save()
                 return Response(serializers.BoecTelegramSerializer(boec).data)
             else:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response(
+                    serializers.BoecTelegramSerializer(boec).data,
+                    status=status.HTTP_204_NO_CONTENT,
+                )
         except Boec.DoesNotExist:
             msg = _(f"Boec with VK ID = {vk_id} doesn't exist")
             return Response({"error": msg}, status=status.HTTP_404_NOT_FOUND)

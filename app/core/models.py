@@ -315,11 +315,11 @@ class Season(models.Model):
     )
     year = models.IntegerField(verbose_name="Год выезда")
 
-    isAccepted = models.BooleanField(default=False, verbose_name="Подтвержден")
-    isCandidate = models.BooleanField(default=True, verbose_name="Не стал бойцом")
+    is_accepted = models.BooleanField(default=False, verbose_name="Подтвержден")
+    is_candidate = models.BooleanField(default=True, verbose_name="Не стал бойцом")
 
     def __str__(self):
-        return f"{self.year} - {self.brigade.title} {self.boec.lastName}"
+        return f"{self.year} - {self.brigade.title} {self.boec.last_name}"
 
 
 @reversion.register()
@@ -362,18 +362,18 @@ class Position(models.Model):
         null=True,
         blank=True,
     )
-    fromDate = models.DateTimeField(default=timezone.now)
-    toDate = models.DateTimeField(null=True, blank=True)
+    from_date = models.DateTimeField(default=timezone.now)
+    to_date = models.DateTimeField(null=True, blank=True)
 
     def validate(self, data):
         if not data["brigade"] and not data["shtab"]:
             raise ValidationError(
-                {"error": "Even one of brigade or shtab should have a value."}
+                {"error": "Either brigade or shtab must have a value."}
             )
 
     def __str__(self):
-        additionalMsg = _("Действующий") if (not self.toDate) else ""
-        return f"{self.get_position_display()} | {self.boec} | " f"{additionalMsg}"
+        additional_msg = _("Действующий") if (not self.to_date) else ""
+        return f"{self.get_position_display()} | {self.boec} | " f"{additional_msg}"
 
 
 @reversion.register()
@@ -416,10 +416,10 @@ class Participant(models.Model):
         null=True,
         blank=True,
     )
-    isApproved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.boec.lastName} | {self.worth} | {self.event.title}"
+        return f"{self.boec.last_name} | {self.worth} | {self.event.title}"
 
 
 @reversion.register()
@@ -504,9 +504,9 @@ class Nomination(models.Model):
         CompetitionParticipant, related_name="nomination", blank=True
     )
 
-    isRated = models.BooleanField(default=True)
+    is_rated = models.BooleanField(default=True)
 
-    sportPlace = models.IntegerField(
+    sport_place = models.IntegerField(
         verbose_name="Место, если спорт", blank=True, null=True
     )
 

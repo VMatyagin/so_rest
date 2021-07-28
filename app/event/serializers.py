@@ -142,14 +142,14 @@ class CompetitionSerializer(DynamicFieldsModelSerializer):
 
     def get_winner_count(self, obj):
         return obj.competition_participation.filter(
-            worth=1, nomination__isnull=False, nomination__isRated=True
+            worth=1, nomination__isnull=False, nomination__is_rated=True
         ).count()
 
     notwinner_count = serializers.SerializerMethodField("get_notwinner_count")
 
     def get_notwinner_count(self, obj):
         return obj.competition_participation.filter(
-            worth=1, nomination__isnull=False, nomination__isRated=False
+            worth=1, nomination__isnull=False, nomination__is_rated=False
         ).count()
 
     class Meta:
@@ -188,7 +188,7 @@ class NominationSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Nomination
-        fields = ("id", "competition", "title", "isRated", "sportPlace")
+        fields = ("id", "competition", "title", "is_rated", "sport_place")
         read_only_fields = ("id",)
         extra_kwargs = {"competition": {"required": False}}
 

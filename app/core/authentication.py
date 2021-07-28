@@ -10,7 +10,7 @@ from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
 # Защищённый ключ из настроек вашего приложения
-client_secret = os.environ.get("VK_CLIENT_SECRET", "yvvyGdRpObCuxrRuChYQ")
+client_secret = os.environ.get("VK_CLIENT_SECRET")
 
 
 def is_valid(query: dict, secret: str) -> bool:

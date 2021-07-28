@@ -104,7 +104,7 @@ class Area(models.Model):
         verbose_name_plural = "Направления"
 
     title = models.CharField(max_length=255)
-    shortTitle = models.CharField(max_length=10)
+    short_title = models.CharField(max_length=10)
     created_at = models.DateField(default=timezone.now)
     updated_at = AutoDateTimeField(default=timezone.now)
 
@@ -113,7 +113,7 @@ class Area(models.Model):
         return self.brigades.count()
 
     def __str__(self):
-        return self.shortTitle
+        return self.short_title
 
 
 @reversion.register()
@@ -124,22 +124,22 @@ class Boec(models.Model):
         verbose_name = "Боец"
         verbose_name_plural = "Бойцы"
 
-    firstName = models.CharField(max_length=255)
-    lastName = models.CharField(max_length=255)
-    middleName = models.CharField(max_length=255, blank=True)
-    DOB = models.DateField(null=True, blank=True)
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    middle_name = models.CharField(max_length=255, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateField(default=timezone.now)
     updated_at = AutoDateTimeField(default=timezone.now)
     vk_id = models.IntegerField(
         verbose_name="VK id", blank=True, null=True, unique=True
     )
-    unreadActivityCount = models.IntegerField(default=0)
+    unread_activity_count = models.IntegerField(default=0)
     telegram_id = models.IntegerField(
         verbose_name="Telegram ID", null=True, unique=True, blank=True
     )
 
     def __str__(self):
-        return f"{self.lastName} {self.firstName} {self.middleName}"
+        return f"{self.last_name} {self.first_name} {self.middle_name}"
 
 
 @reversion.register()
@@ -154,7 +154,7 @@ class Brigade(models.Model):
     area = models.ForeignKey(Area, on_delete=models.RESTRICT, related_name="brigades")
     shtab = models.ForeignKey(Shtab, on_delete=models.RESTRICT)
     boec = models.ManyToManyField(Boec, blank=True, related_name="brigades")
-    DOB = models.DateTimeField(null=True, blank=True)
+    date_of_birth = models.DateTimeField(null=True, blank=True)
     created_at = models.DateField(default=timezone.now)
     updated_at = AutoDateTimeField(default=timezone.now)
 
@@ -203,13 +203,13 @@ class Event(models.Model):
     shtab = models.ForeignKey(
         Shtab, on_delete=models.SET_NULL, null=True, verbose_name="Штаб"
     )
-    startDate = models.DateTimeField(verbose_name="Дата начала")
-    startTime = models.TimeField(null=True, blank=True, verbose_name="Время начала")
+    start_date = models.DateTimeField(verbose_name="Дата начала")
+    start_time = models.TimeField(null=True, blank=True, verbose_name="Время начала")
 
     visibility = models.BooleanField(default=False, verbose_name="Видимость")
-    isCanonical = models.BooleanField(default=False, verbose_name="Каноничность")
+    is_canonical = models.BooleanField(default=False, verbose_name="Каноничность")
 
-    isTicketed = models.BooleanField(default=False, verbose_name="Вход по билетам")
+    is_ticketed = models.BooleanField(default=False, verbose_name="Вход по билетам")
 
     def __str__(self):
         return self.title
@@ -240,8 +240,8 @@ class Ticket(models.Model):
 
     uuid = models.UUIDField(verbose_name="Код", null=True, default=None)
 
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def generate_uuid(self) -> str:
         self.uuid = uuid.uuid4()
@@ -283,19 +283,19 @@ class TicketScan(models.Model):
         related_name="ticket_scans",
     )
 
-    isFinal = models.BooleanField(default=True, verbose_name="Проверен")
+    is_final = models.BooleanField(default=True, verbose_name="Проверен")
 
-    createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
-    def is_final(self) -> str:
-        return "Проверен" if self.isFinal else "Предъявлен"
+    def is_final_str(self) -> str:
+        return "Проверен" if self.is_final else "Предъявлен"
 
     def __str__(self) -> str:
         return (
             f"{self.ticket.boec} — {self.ticket.event} — "
-            f"{self.is_final} {naturaltime(self.createdAt)}"
+            f"{self.is_final_str} {naturaltime(self.created_at)}"
         )
 
 

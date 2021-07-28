@@ -58,12 +58,12 @@ class EventSerializer(DynamicFieldsModelSerializer):
             "description",
             "location",
             "shtab",
-            "startDate",
-            "startTime",
+            "start_date",
+            "start_time",
             "visibility",
             "worth",
             "shtabId",
-            "isTicketed",
+            "is_ticketed",
             "isParticipant",
         )
         read_only_fields = ("id", "shtab")

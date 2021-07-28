@@ -88,8 +88,8 @@ class AreaAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
 
 class BoecAdmin(CompareVersionAdmin, admin.ModelAdmin):
-    ordering = ["lastName"]
-    search_fields = ("lastName", "firstName")
+    ordering = ["last_name"]
+    search_fields = ("last_name", "first_name")
 
 
 class BrigadeAdmin(CompareVersionAdmin, admin.ModelAdmin):

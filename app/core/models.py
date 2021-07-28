@@ -133,7 +133,7 @@ class Boec(models.Model):
     vkId = models.IntegerField(verbose_name="VK id", blank=True, null=True, unique=True)
     unreadActivityCount = models.IntegerField(default=0)
     telegram_id = models.IntegerField(
-        verbose_name="Telegram ID", null=True, unique=True
+        verbose_name="Telegram ID", null=True, unique=True, blank=True
     )
 
     def __str__(self):

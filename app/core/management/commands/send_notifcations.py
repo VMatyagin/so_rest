@@ -37,7 +37,7 @@ class Command(BaseCommand):
             for ids_chunk in list:
                 ids = ",".join(ids_chunk)
 
-                message = "Notification"
+                message = "Поздравляем, Ваш коллектив прошел отбор на фестиваль!"
                 url = f"https://api.vk.com/method/notifications.sendMessage?message={message}&user_ids={ids}=&access_token={secret}&v=5.131"
                 r = requests.get(url)
                 data = r.json()

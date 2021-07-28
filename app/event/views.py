@@ -80,7 +80,7 @@ class EventViewSet(
 
     def perform_update(self, serializer):
         event = self.get_object()
-        status = serializer.validated_data["status"]
+        status = serializer.validated_data.get("status", None)
 
         if status == 1:
 

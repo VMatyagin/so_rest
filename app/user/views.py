@@ -2,14 +2,13 @@ from core.authentication import VKAuthentication
 from core.models import Achievement, Activity, Boec
 from django.db.models import Count
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import generics, mixins, permissions, viewsets
+from rest_framework import generics, permissions, viewsets
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from reversion.views import RevisionMixin
-from so import serializers
 from user.serializers import (
     AchievementSerializer,
     ActivitySerializer,
@@ -25,7 +24,7 @@ class CreateTokenView(ObtainAuthToken):
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
 
-class ManangeUserView(generics.RetrieveAPIView):
+class ManageUserView(generics.RetrieveAPIView):
     """manage the authenticated user"""
 
     serializer_class = UserSerializer
@@ -73,9 +72,9 @@ class ActivityView(RevisionMixin, viewsets.GenericViewSet):
     )
     def markAsRead(self, request, pk=None):
         try:
-            boec = Boec.objects.get(vkId=self.request.user.vkId)
+            boec: Boec = Boec.objects.get(vk_id=self.request.user.vk_id)
             Activity.objects.filter(boec=boec, seen=False).update(seen=True)
-            boec.unreadActivityCount = 0
+            boec.unread_activity_count = 0
             boec.save()
         except (Boec.DoesNotExist, ValidationError):
             msg = _("Boec doesnt exists.")

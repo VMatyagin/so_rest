@@ -28,16 +28,15 @@ class EventSerializer(DynamicFieldsModelSerializer):
         queryset=Shtab.objects.all(), source="shtab", required=False
     )
 
-    isParticipant = serializers.SerializerMethodField("get_participant_status")
+    is_participant = serializers.SerializerMethodField("get_participant_status")
 
     def get_participant_status(self, obj):
-        user = None
         request = self.context.get("request")
 
         if request and hasattr(request, "user"):
             user = request.user
             try:
-                boec = Boec.objects.get(vkId=user.vkId)
+                boec = Boec.objects.get(vk_id=user.vk_id)
             except (Boec.DoesNotExist):
                 msg = _("Boec not found")
                 raise serializers.ValidationError({"error": msg})
@@ -64,7 +63,7 @@ class EventSerializer(DynamicFieldsModelSerializer):
             "worth",
             "shtabId",
             "is_ticketed",
-            "isParticipant",
+            "is_participant",
         )
         read_only_fields = ("id", "shtab")
 
@@ -73,16 +72,16 @@ class ParticipantSerializer(DynamicFieldsModelSerializer):
     """serializer for participants"""
 
     event = EventSerializer(fields=("id", "title"), required=False)
-    eventId = serializers.PrimaryKeyRelatedField(
+    event_id = serializers.PrimaryKeyRelatedField(
         queryset=Brigade.objects.all(), source="event", required=False
     )
 
     boec = BoecInfoSerializer(required=False)
-    boecId = serializers.PrimaryKeyRelatedField(
+    boec_id = serializers.PrimaryKeyRelatedField(
         queryset=Boec.objects.all(), source="boec"
     )
 
-    def validate_boecId(self, value):
+    def validate_boec_id(self, value):
         participant = Participant.objects.filter(
             event=self.context["event_pk"], boec=value
         )
@@ -108,10 +107,10 @@ class ParticipantSerializer(DynamicFieldsModelSerializer):
             "boec",
             "event",
             "worth",
-            "boecId",
-            "eventId",
+            "boec_id",
+            "event_id",
             "brigade",
-            "isApproved",
+            "is_approved",
         )
         read_only_fields = ("id", "boec", "event")
 
@@ -133,9 +132,9 @@ class CompetitionSerializer(DynamicFieldsModelSerializer):
     def get_participant_count(self, obj):
         return obj.competition_participation.filter(worth=0).count()
 
-    ivolvement_count = serializers.SerializerMethodField("get_ivolvement_count")
+    involvement_count = serializers.SerializerMethodField("get_involvement_count")
 
-    def get_ivolvement_count(self, obj):
+    def get_involvement_count(self, obj):
         return obj.competition_participation.filter(worth=1).count()
 
     winner_count = serializers.SerializerMethodField("get_winner_count")
@@ -159,7 +158,7 @@ class CompetitionSerializer(DynamicFieldsModelSerializer):
             "event",
             "title",
             "participant_count",
-            "ivolvement_count",
+            "involvement_count",
             "winner_count",
             "notwinner_count",
             "ratingless",
@@ -167,7 +166,7 @@ class CompetitionSerializer(DynamicFieldsModelSerializer):
         read_only_fields = (
             "id",
             "participant_count",
-            "ivolvement_count",
+            "involvement_count",
             "winner_count",
             "notwinner_count",
         )
@@ -263,7 +262,7 @@ class CompetitionParticipantsSerializer(DynamicFieldsModelSerializer):
         #     instance.boec.all(), many=True).data
         return representation
 
-    brigadesIds = serializers.PrimaryKeyRelatedField(
+    brigade_ids = serializers.PrimaryKeyRelatedField(
         queryset=Brigade.objects.all(), source="brigades", many=True, required=False
     )
 
@@ -280,7 +279,7 @@ class CompetitionParticipantsSerializer(DynamicFieldsModelSerializer):
             "brigades",
             "nomination",
             "brigades",
-            "brigadesIds",
+            "brigade_ids",
             "title",
         )
         read_only_fields = ("id", "brigades")
@@ -321,7 +320,7 @@ class TicketSerializer(DynamicFieldsModelSerializer):
             "uuid",
             "boec",
             "event",
-            "createdAt",
-            "updatedAt",
+            "created_at",
+            "updated_at",
         )
         read_only_fields = ("id",)

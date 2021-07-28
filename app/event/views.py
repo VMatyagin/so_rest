@@ -22,7 +22,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from reversion.views import RevisionMixin
-from so.views import refreshBoecAchievements
+from so.views import refresh_boec_achievements
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class EventViewSet(
 
     def get_queryset(self):
         """Return ordered by title objects"""
-        queryset = self.queryset.order_by("-startDate")
+        queryset = self.queryset.order_by("-start_date")
 
         visibility = self.request.query_params.get("visibility")
 
@@ -69,21 +69,20 @@ class EventViewSet(
 
     def iterate_over_boecs(event):
         for boec in event.event_participation.all():
-            refreshBoecAchievements(boec=boec)
+            refresh_boec_achievements(boec=boec)
 
         competitions_participants = CompetitionParticipant.objects.filter(
             competition__event=event, competition__ratingless=False
         )
         for item in competitions_participants.all():
             for boec in item.boec.all():
-                refreshBoecAchievements(boec=boec)
+                refresh_boec_achievements(boec=boec)
 
     def perform_update(self, serializer):
         event = self.get_object()
         status = serializer.validated_data.get("status", None)
 
         if status == 1:
-
             Thread(target=self.iterate_over_boecs, args=(event,)).start()
 
         return super().perform_update(serializer)
@@ -96,7 +95,7 @@ class EventViewSet(
         url_name="report",
         authentication_classes=(VKAuthentication,),
     )
-    def generateReport(self, request, pk):
+    def generate_report(self, request, pk):
         event = Event.objects.get(id=pk)
         reporter = EventReportGenerator("1s_NVTmYxG5GloDaOOw4d7eh7P_zAcobTmIRseYHsg3g")
         Thread(target=reporter.create, args=[event]).start()
@@ -132,7 +131,7 @@ class EventViewSet(
         url_name="rating",
         authentication_classes=(VKAuthentication,),
     )
-    def generateRating(self, request):
+    def generate_rating(self, request):
         reporter = EventsRatingGenerator("1s_NVTmYxG5GloDaOOw4d7eh7P_zAcobTmIRseYHsg3g")
         Thread(target=reporter.create).start()
 
@@ -148,21 +147,21 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
 
     def get_queryset(self):
         worth = self.request.query_params.get("worth", None)
-        brigadeId = self.request.query_params.get("brigadeId", None)
+        brigade_id = self.request.query_params.get("brigadeId", None)
         status = self.request.query_params.get("status", "approved")
         queryset = Participant.objects.filter(event=self.kwargs["event_pk"])
 
         if self.request.method == "GET" and status == "approved":
-            queryset = queryset.filter(isApproved=True)
+            queryset = queryset.filter(is_approved=True)
 
         if self.request.method == "GET" and status == "notapproved":
-            queryset = queryset.filter(isApproved=False)
+            queryset = queryset.filter(is_approved=False)
 
         if worth is not None:
             queryset = queryset.filter(worth=worth)
 
-        if brigadeId is not None:
-            queryset = queryset.filter(brigade=brigadeId)
+        if brigade_id is not None:
+            queryset = queryset.filter(brigade=brigade_id)
         return queryset
 
     def get_serializer_context(self):
@@ -171,14 +170,14 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
         return context
 
     def perform_create(self, serializer):
-        eventId = self.kwargs["event_pk"]
-        event = Event.objects.get(id=eventId)
+        event_id = self.kwargs["event_pk"]
+        event = Event.objects.get(id=event_id)
         worth = serializer.validated_data["worth"]
 
-        isApproved = serializer.validated_data.get("isApproved", False)
+        is_approved = serializer.validated_data.get("isApproved", False)
 
-        if not isApproved and worth > 0 or not event.isTicketed:
-            isApproved = True
+        if not is_approved and worth > 0 or not event.is_ticketed:
+            is_approved = True
 
         if "brigade" not in serializer.validated_data:
             boec_last_season = (
@@ -187,11 +186,11 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
                 .first()
             )
             serializer.save(
-                event=event, brigade=boec_last_season.brigade, isApproved=isApproved
+                event=event, brigade=boec_last_season.brigade, is_approved=is_approved
             )
 
         else:
-            serializer.save(event=event, isApproved=isApproved)
+            serializer.save(event=event, is_approved=is_approved)
 
     @action(
         methods=["post"],
@@ -203,14 +202,14 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
     )
     def approve(self, request, pk, **kwargs):
         participant = Participant.objects.get(id=pk)
-        participant.isApproved = True
+        participant.is_approved = True
         participant.save()
 
         # TODO не создавать отдельные варнинги юзерам
         text = f"Ваша заявка на мероприятие {participant.event} одобрена"
         warning = Warning.objects.create(text=text)
         Activity.objects.create(type=0, boec=participant.boec, warning=warning)
-        participant.boec.unreadActivityCount += 1
+        participant.boec.unread_activity_count += 1
         participant.boec.save()
 
         return Response({})
@@ -225,14 +224,14 @@ class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):
     )
     def unapprove(self, request, pk, **kwargs):
         participant = Participant.objects.get(id=pk)
-        participant.isApproved = False
+        participant.is_approved = False
         participant.save()
 
         # TODO не создавать отдельные варнинги юзерам
         text = f"Ваша заявка на мероприятие {participant.event} отклонена"
         warning = Warning.objects.create(text=text)
         Activity.objects.create(type=1, boec=participant.boec, warning=warning)
-        participant.boec.unreadActivityCount += 1
+        participant.boec.unread_activity_count += 1
         participant.boec.save()
 
         return Response({})
@@ -263,8 +262,8 @@ class EventCompetitionListCreate(
 
     def perform_create(self, serializer):
         if "event_pk" in self.kwargs:
-            eventId = self.kwargs["event_pk"]
-            event = Event.objects.get(id=eventId)
+            event_id = self.kwargs["event_pk"]
+            event = Event.objects.get(id=event_id)
             serializer.save(event=event)
         else:
             super().perform_create(serializer)
@@ -300,11 +299,11 @@ class EventCompetitionParticipants(RevisionMixin, viewsets.ModelViewSet):
         if worth is not None:
             if int(worth) == 2:
                 queryset = queryset.filter(
-                    worth=1, nomination__isRated=True, nomination__isnull=False
+                    worth=1, nomination__is_rated=True, nomination__isnull=False
                 )
             elif int(worth) == 3:
                 queryset = queryset.filter(
-                    worth=1, nomination__isRated=False, nomination__isnull=False
+                    worth=1, nomination__is_rated=False, nomination__isnull=False
                 )
             else:
                 queryset = queryset.filter(worth=worth)
@@ -325,8 +324,8 @@ class EventCompetitionParticipants(RevisionMixin, viewsets.ModelViewSet):
                 },
                 code="validation",
             )
-        competitionId = self.kwargs["competition_pk"]
-        competition = Competition.objects.get(id=competitionId)
+        competition_id = self.kwargs["competition_pk"]
+        competition = Competition.objects.get(id=competition_id)
         serializer.save(competition=competition)
 
 
@@ -358,8 +357,8 @@ class NominationView(RevisionMixin, viewsets.ModelViewSet):
                 },
                 code="validation",
             )
-        competitionId = self.kwargs["competition_pk"]
-        competition = Competition.objects.get(id=competitionId)
+        competition_id = self.kwargs["competition_pk"]
+        competition = Competition.objects.get(id=competition_id)
         serializer.save(competition=competition)
 
     def perform_destroy(self, instance):
@@ -409,7 +408,7 @@ class TicketViewSet(
                 }
             )
         return Response(
-            {"prevScanAt": previous_scan.createdAt, "eventId": ticket.event.id}
+            {"prevScanAt": previous_scan.created_at, "eventId": ticket.event.id}
         )
 
     @action(
@@ -425,6 +424,6 @@ class TicketViewSet(
         if not ticket.is_used:
             raise ValueError("Ticket never actually used")
         last_valid_scan = ticket.last_valid_scan()
-        last_valid_scan.isFinal = False
+        last_valid_scan.is_final = False
         last_valid_scan.save()
         return Response({})

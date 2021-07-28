@@ -1,6 +1,6 @@
 from core.models import Boec, User
 from django.core.management.base import BaseCommand
-from so.views import refreshBoecAchievements
+from so.views import refresh_boec_achievements
 
 
 class Command(BaseCommand):
@@ -15,4 +15,4 @@ class Command(BaseCommand):
             except (Boec.DoesNotExist):
                 continue
 
-            refreshBoecAchievements(boec=boec)
+            refresh_boec_achievements(boec=boec)

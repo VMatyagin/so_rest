@@ -34,25 +34,20 @@ class BrigadeShortSerializer(DynamicFieldsModelSerializer):
 class BoecInfoSerializer(serializers.ModelSerializer):
     """serializer for boec objects"""
 
-    fullName = serializers.SerializerMethodField("get_full_name")
-
-    def get_full_name(self, obj):
-        return f"{obj.lastName} {obj.firstName} {obj.middleName}"
-
     class Meta:
         model = Boec
-        fields = ("id", "firstName", "lastName", "middleName", "fullName")
-        read_only_fields = ("id", "fullName")
+        fields = ("id", "first_name", "last_name", "middle_name", "full_name")
+        read_only_fields = ("id", "full_name")
 
 
 class SeasonSerializer(DynamicFieldsModelSerializer):
     """serializer for season objects"""
 
     brigade = BrigadeShortSerializer(read_only=True)
-    brigadeId = serializers.PrimaryKeyRelatedField(
+    brigade_id = serializers.PrimaryKeyRelatedField(
         queryset=Brigade.objects.all(), source="brigade"
     )
-    boecId = serializers.PrimaryKeyRelatedField(
+    boec_id = serializers.PrimaryKeyRelatedField(
         queryset=Boec.objects.all(), source="boec"
     )
 
@@ -65,51 +60,42 @@ class SeasonSerializer(DynamicFieldsModelSerializer):
             "boec",
             "year",
             "brigade",
-            "brigadeId",
-            "boecId",
-            "isCandidate",
-            "isAccepted",
+            "brigade_id",
+            "boec_id",
+            "is_candidate",
+            "is_accepted",
         )
         read_only_fields = ("id", "brigade", "boec")
 
 
 class BoecTelegramSerializer(serializers.ModelSerializer):
     "Serializer for boec objects for Telegram interaction"
-    fullName = serializers.SerializerMethodField("get_full_name")
-
-    def get_full_name(self, obj):
-        return f"{obj.lastName} {obj.firstName} {obj.middleName}"
 
     class Meta:
         model = Boec
         fields = (
             "id",
-            "fullName",
-            "vkId",
+            "full_name",
+            "vk_id",
         )
-        read_only_fields = ("id", "fullName")
+        read_only_fields = ("id", "full_name")
 
 
 class BoecSerializer(serializers.ModelSerializer):
     """serializer for boec objects"""
 
-    fullName = serializers.SerializerMethodField("get_full_name")
-
-    def get_full_name(self, obj):
-        return f"{obj.lastName} {obj.firstName} {obj.middleName}"
-
     class Meta:
         model = Boec
         fields = (
             "id",
-            "firstName",
-            "lastName",
-            "middleName",
-            "DOB",
-            "fullName",
-            "vkId",
+            "first_name",
+            "last_name",
+            "middle_name",
+            "date_of_birth",
+            "fill_name",
+            "vk_id",
         )
-        read_only_fields = ("id", "fullName")
+        read_only_fields = ("id", "full_name")
 
 
 class BrigadeSerializer(DynamicFieldsModelSerializer):
@@ -136,7 +122,7 @@ class BrigadeSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Brigade
-        fields = ("id", "title", "shtab", "area", "DOB")
+        fields = ("id", "title", "shtab", "area", "date_of_birth")
         read_only_fields = ("id",)
 
 
@@ -157,7 +143,7 @@ class AreaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Area
-        fields = ("id", "title", "shortTitle", "brigades")
+        fields = ("id", "title", "short_title", "brigades")
         read_only_fields = ("id",)
 
 
@@ -167,7 +153,7 @@ class PositionSerializer(serializers.ModelSerializer):
     boec = BoecInfoSerializer(required=False)
     brigade = BrigadeShortSerializer(required=False)
     shtab = ShtabSerializer(required=False)
-    boecId = serializers.PrimaryKeyRelatedField(
+    boec_id = serializers.PrimaryKeyRelatedField(
         queryset=Boec.objects.all(), source="boec"
     )
 
@@ -179,9 +165,9 @@ class PositionSerializer(serializers.ModelSerializer):
             "boec",
             "brigade",
             "shtab",
-            "fromDate",
-            "toDate",
-            "boecId",
+            "from_date",
+            "to_date",
+            "boec_id",
         )
         read_only_fields = ("id", "boec")
 

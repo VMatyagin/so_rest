@@ -15,18 +15,18 @@ from core.models import (
     Season,
     Shtab,
 )
-from django.http import JsonResponse
 from django.utils.translation import ugettext_lazy as _
 from event.serializers import ParticipantHistorySerializer, ParticipantSerializer
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from reversion.views import RevisionMixin
 from so import serializers
 from user.serializers import ActivitySerializer
+
+logger = logging.getLogger(__name__)
 
 
 class ShtabViewSet(RevisionMixin, viewsets.ModelViewSet):
@@ -68,7 +68,7 @@ class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
                 {"error": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED
             )
         try:
-            boec = Boec.objects.get(vkId=vk_id)
+            boec = Boec.objects.get(vk_id=vk_id)
             if boec.telegram_id != telegram_id:
                 boec.telegram_id = telegram_id
                 boec.save()
@@ -93,7 +93,7 @@ class BoecViewSet(RevisionMixin, viewsets.ModelViewSet):
     authentication_classes = (VKAuthentication,)
     permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
-    search_fields = ("^lastName", "firstName", "middleName")
+    search_fields = ("^last_name", "first_name", "middle_name")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -102,11 +102,11 @@ class BoecViewSet(RevisionMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return ordered by id objects"""
-        queryset = self.queryset.order_by("lastName")
+        queryset = self.queryset.order_by("last_name")
 
-        brigadeId = self.request.query_params.get("brigadeId", None)
-        if brigadeId is not None:
-            queryset = queryset.filter(brigades=brigadeId)
+        brigade_id = self.request.query_params.get("brigade_id", None)
+        if brigade_id is not None:
+            queryset = queryset.filter(brigades=brigade_id)
         return queryset
 
     def perform_create(self, serializer):
@@ -170,7 +170,7 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
         )
 
 
-def generateBoecProgress(boec):
+def generate_boec_progress(boec: Boec):
     event_participant = boec.event_participation.filter(
         isApproved=True, event__status=1
     )
@@ -193,7 +193,7 @@ def generateBoecProgress(boec):
     sport_wins = with_nomination.filter(competition__event__worth=2).count()
     art_wins = with_nomination.filter(competition__event__worth=1).count()
 
-    seasons = boec.seasons.filter(isCandidate=False, isAccepted=True).count()
+    seasons = boec.seasons.filter(is_candidate=False, is_accepted=True).count()
 
     return {
         "participation_count": participation_default,
@@ -208,8 +208,8 @@ def generateBoecProgress(boec):
     }
 
 
-def refreshBoecAchievements(boec):
-    progress = generateBoecProgress(boec)
+def refresh_boec_achievements(boec: Boec):
+    progress = generate_boec_progress(boec)
     achievements = Achievement.objects.all()
 
     for ach in achievements:
@@ -220,7 +220,7 @@ def refreshBoecAchievements(boec):
         if user_progress >= ach.goal and not ach.boec.filter(id=boec.id).exists():
             ach.boec.add(boec)
             Activity.objects.create(type=2, boec=boec, achievement=ach)
-            boec.unreadActivityCount += 1
+            boec.unread_activity_count += 1
 
     boec.save()
 
@@ -234,7 +234,7 @@ class BoecProgress(RevisionMixin, viewsets.ViewSet):
     def list(self, request, boec_pk=None):
         if boec_pk == None:
             user = request.user
-            boec = Boec.objects.get(vkId=user.vkId)
+            boec = Boec.objects.get(vk_id=user.vk_id)
         else:
             try:
                 boec = Boec.objects.get(id=boec_pk)
@@ -242,7 +242,7 @@ class BoecProgress(RevisionMixin, viewsets.ViewSet):
                 msg = _("Boec doesnt exists.")
                 raise ValidationError({"error": msg}, code="validation")
 
-        progress = generateBoecProgress(boec=boec)
+        progress = generate_boec_progress(boec=boec)
         return Response(progress)
 
 
@@ -265,9 +265,6 @@ class BrigadeViewSet(RevisionMixin, viewsets.ModelViewSet):
         return self.queryset.order_by("title")
 
 
-logger = logging.getLogger(__name__)
-
-
 class SubjectPositions(
     RevisionMixin,
     mixins.CreateModelMixin,
@@ -288,26 +285,26 @@ class SubjectPositions(
             shtab=self.kwargs.get("shtab_pk", None),
         )
 
-        toDate = self.request.query_params.get("hideLast", None)
-        if toDate == "true":
-            queryset = queryset.filter(toDate=None)
-        return queryset.order_by("-toDate")
+        to_date = self.request.query_params.get("hideLast", None)
+        if to_date == "true":
+            queryset = queryset.filter(to_date=None)
+        return queryset.order_by("-to_date")
 
     def perform_create(self, serializer):
-        brigadeId = self.kwargs.get("brigade_pk", None)
-        shtabId = self.kwargs.get("shtab_pk", None)
-        if brigadeId:
+        brigade_id = self.kwargs.get("brigade_pk", None)
+        shtab_id = self.kwargs.get("shtab_pk", None)
+        if brigade_id:
             try:
-                brigade = Brigade.objects.get(id=brigadeId)
+                brigade = Brigade.objects.get(id=brigade_id)
                 serializer.save(brigade=brigade)
 
             except (Brigade.DoesNotExist, ValidationError):
                 msg = _("Invalid brigade.")
                 raise ValidationError({"error": msg}, code="validation")
 
-        elif shtabId:
+        elif shtab_id:
             try:
-                shtab = Shtab.objects.get(id=shtabId)
+                shtab = Shtab.objects.get(id=shtab_id)
                 serializer.save(shtab=shtab)
 
             except (Shtab.DoesNotExist, ValidationError):
@@ -324,7 +321,7 @@ class BrigadeSeasons(RevisionMixin, viewsets.ReadOnlyModelViewSet):
     authentication_classes = (VKAuthentication,)
     permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
-    search_fields = ("^boec__lastName", "boec__firstName", "boec__middleName")
+    search_fields = ("^boec__last_name", "boec__first_name", "boec__middle_name")
 
     def get_queryset(self):
         return Season.objects.filter(brigade=self.kwargs["brigade_pk"]).order_by(

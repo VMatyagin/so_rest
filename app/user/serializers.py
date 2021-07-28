@@ -5,7 +5,7 @@ from core.models import Achievement, Activity, Boec, Brigade, Shtab, Warning
 from core.serializers import DynamicFieldsModelSerializer
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import serializers, status
+from rest_framework import serializers
 from so.serializers import BoecInfoSerializer, BrigadeSerializer, ShtabSerializer
 
 logger = logging.getLogger(__name__)
@@ -23,12 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
     shtabs = serializers.SerializerMethodField("get_editable_shtabs", read_only=True)
     boec = serializers.SerializerMethodField("get_boec", read_only=True)
     unreadActivityCount = serializers.SerializerMethodField(
-        "get_boec_unreadActivityCount", read_only=True
+        "get_boec_unread_activity_count", read_only=True
     )
 
     def get_editable_brigades(self, obj):
         brigades = Brigade.objects.filter(
-            positions__toDate__isnull=True, positions__boec__vkId=obj.vkId
+            positions__to_date__isnull=True, positions__boec__vk_id=obj.vk_id
         ).distinct()
 
         serializer = BrigadeSerializer(brigades, many=True, fields=("id", "title"))
@@ -36,17 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_season_brigades(self, obj):
-        brigades = Brigade.objects.filter(seasons__boec__vkId=obj.vkId).distinct()
+        brigades = Brigade.objects.filter(seasons__boec__vk_id=obj.vk_id).distinct()
 
         serializer = BrigadeSerializer(brigades, many=True, fields=("id", "title"))
 
         return serializer.data
 
     def get_editable_shtabs(self, obj):
-
         shtabs = Shtab.objects.filter(
-            positions__toDate__isnull=True,
-            positions__boec__vkId=obj.vkId,
+            positions__to_date__isnull=True,
+            positions__boec__vk_ud=obj.vk_id,
         ).distinct()
 
         serializer = ShtabSerializer(shtabs, many=True, fields=("id", "title"))
@@ -55,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_boec(self, obj):
         try:
-            boec_obj = Boec.objects.get(vkId=obj.vkId)
+            boec_obj = Boec.objects.get(vk_id=obj.vk_id)
             serializer = BoecInfoSerializer(boec_obj)
         except (Boec.DoesNotExist):
             return None
@@ -63,8 +62,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_boec_unreadActivityCount(self, obj):
         try:
-            boec_obj = Boec.objects.get(vkId=obj.vkId)
-            return boec_obj.unreadActivityCount
+            boec_obj: Boec = Boec.objects.get(vk_id=obj.vk_id)
+            return boec_obj.unread_activity_count
         except (Boec.DoesNotExist):
             return 0
 
@@ -76,8 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
             "boec",
             "shtabs",
             "is_staff",
-            "seasonBrigades",
-            "unreadActivityCount",
+            "season_brigades",
+            "unread_activity_count",
         )
 
     def create(self, validated_data):
@@ -102,12 +101,12 @@ class AuthTokenSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """validate and authenticate the user"""
-        vkId = attrs.get("vkId")
+        vk_id = attrs.get("vkId")
         # password = attrs.get('password')
 
-        user = PasswordlessAuthBackend.authenticate(
+        user = PasswordlessAuthBackend().authenticate(
             request=self.context.get("request"),
-            vkId=vkId,
+            vk_id=vk_id,
             # password=password
         )
         if not user:
@@ -134,20 +133,20 @@ class AchievementSerializer(DynamicFieldsModelSerializer):
     def check_status(self, obj):
         request = self.context.get("request")
         if request:
-            boecId = self.context["request"].query_params.get("boecId", None)
+            boec_id = self.context["request"].query_params.get("boec_id", None)
 
-            if boecId == None:
+            if boec_id == None:
                 user = request.user
-                boec = Boec.objects.get(vkId=user.vkId)
+                boec: Boec = Boec.objects.get(vk_id=user.vk_id)
             else:
                 try:
-                    boec = Boec.objects.get(id=boecId)
+                    boec: Boec = Boec.objects.get(id=boec_id)
                 except (Boec.DoesNotExist):
                     msg = _("Boec not found")
                     raise serializers.ValidationError({"error": msg})
 
-            isAchieved = obj.boec.filter(id=boec.id).exists()
-            if not isAchieved:
+            is_achieved = obj.boec.filter(id=boec.id).exists()
+            if not is_achieved:
                 return None
 
             try:

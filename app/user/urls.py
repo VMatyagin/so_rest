@@ -8,7 +8,7 @@ app_name = "user"
 router = SimpleRouter()
 
 urlpatterns = [
-    path("me/", views.ManangeUserView.as_view(), name="me"),
+    path("me/", views.ManageUserView.as_view(), name="me"),
     path("activity/", views.ActivityView.as_view({"get": "retrieve"}), name="activity"),
     path(
         "activity/markAsRead",

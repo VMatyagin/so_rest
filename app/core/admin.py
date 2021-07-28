@@ -4,7 +4,6 @@ from core import models
 from core.auth_backend import PasswordlessAuthBackend
 from django import forms
 from django.contrib import admin
-from django.contrib.admin.filters import SimpleListFilter
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
@@ -75,7 +74,7 @@ class UserAdmin(CompareVersionAdmin, BaseUserAdmin):
 class SeasonAdmin(CompareVersionAdmin, admin.ModelAdmin):
     ordering = ["id"]
     list_display = ["boec", "brigade", "year"]
-    search_fields = ("boec__lastName", "boec__firstName")
+    search_fields = ("boec__last_name", "boec__first_name")
     list_filter = ("brigade", "year")
 
 
@@ -109,9 +108,9 @@ class ActivePositionFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == "0":
-            return queryset.filter(toDate__isnull=True)
+            return queryset.filter(to_date__isnull=True)
         if self.value() == "1":
-            return queryset.filter(toDate__isnull=False)
+            return queryset.filter(to_date__isnull=False)
 
 
 class PositionAdmin(CompareVersionAdmin, admin.ModelAdmin):

@@ -13,3 +13,4 @@ pygsheets==2.0.5
 flake8>=3.8.4,<3.9.0
 pydevd-pycharm~=193.6911.25
 mysqlclient==2.0.3
+djangorestframework-camel-case==1.2.0

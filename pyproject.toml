@@ -20,6 +20,7 @@ psycopg2-binary = ">=2.8.6,<2.9.0"
 pydevd-pycharm = "~=193.6911.25"
 Pillow = "8.2.0"
 mysqlclient = "^2.0.3"
+djangorestframework-camel-case = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = ">=3.8.4,<3.9.0"

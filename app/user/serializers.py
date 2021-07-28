@@ -17,12 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
     brigades = serializers.SerializerMethodField(
         "get_editable_brigades", read_only=True
     )
-    seasonBrigades = serializers.SerializerMethodField(
+    season_brigades = serializers.SerializerMethodField(
         "get_season_brigades", read_only=True
     )
     shtabs = serializers.SerializerMethodField("get_editable_shtabs", read_only=True)
     boec = serializers.SerializerMethodField("get_boec", read_only=True)
-    unreadActivityCount = serializers.SerializerMethodField(
+    unread_activity_count = serializers.SerializerMethodField(
         "get_boec_unread_activity_count", read_only=True
     )
 
@@ -60,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
             return None
         return serializer.data
 
-    def get_boec_unreadActivityCount(self, obj):
+    def get_boec_unread_activity_count(self, obj):
         try:
             boec_obj: Boec = Boec.objects.get(vk_id=obj.vk_id)
             return boec_obj.unread_activity_count

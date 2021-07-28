@@ -92,7 +92,7 @@ class BoecSerializer(serializers.ModelSerializer):
             "last_name",
             "middle_name",
             "date_of_birth",
-            "fill_name",
+            "full_name",
             "vk_id",
         )
         read_only_fields = ("id", "full_name")

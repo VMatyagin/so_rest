@@ -62,14 +62,14 @@ class LoginForm(AdminAuthenticationForm):
 
 class UserAdmin(CompareVersionAdmin, BaseUserAdmin):
     ordering = ["id"]
-    list_display = ["vkId", "name"]
+    list_display = ["vk_id", "name"]
     fieldsets = (
-        (None, {"fields": ("vkId",)}),
+        (None, {"fields": ("vk_id",)}),
         (_("Personal Info"), {"fields": ("name",)}),
         (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser")}),
         (_("Important dates"), {"fields": ("last_login",)}),
     )
-    add_fieldsets = ((None, {"classes": ("wide",), "fields": ("vkId",)}),)
+    add_fieldsets = ((None, {"classes": ("wide",), "fields": ("vk_id",)}),)
 
 
 class SeasonAdmin(CompareVersionAdmin, admin.ModelAdmin):

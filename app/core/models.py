@@ -28,11 +28,11 @@ class AutoDateTimeField(models.DateTimeField):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, vkId, password=None, **extra_fields):
+    def create_user(self, vk_id, password=None, **extra_fields):
         """creates and saves a new user"""
-        if not vkId:
-            raise ValueError("Users must have an vkId")
-        user = self.model(vkId=vkId, **extra_fields)
+        if not vk_id:
+            raise ValueError("Users must have an vk_id")
+        user = self.model(vk_id=vk_id, **extra_fields)
         if password:
             user.set_password(password)
         else:
@@ -41,11 +41,11 @@ class UserManager(BaseUserManager):
 
         return user
 
-    def create_superuser(self, vkId, password=None):
+    def create_superuser(self, vk_id, password=None):
         """creates and save a new super user"""
         if not password:
             raise ValueError("SuperUsers must have password")
-        user = self.create_user(vkId=vkId, password=password)
+        user = self.create_user(vk_id=vk_id, password=password)
         user.is_staff = True
         user.is_superuser = True
 
@@ -62,7 +62,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
-    vkId = models.IntegerField(unique=True)
+    vk_id = models.IntegerField(unique=True)
 
     name = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -73,10 +73,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "vkId"
+    USERNAME_FIELD = "vk_id"
 
     def __str__(self):
-        return f"{self.vkId}"
+        return f"{self.vk_id}"
 
 
 @reversion.register()
@@ -130,7 +130,9 @@ class Boec(models.Model):
     DOB = models.DateField(null=True, blank=True)
     created_at = models.DateField(default=timezone.now)
     updated_at = AutoDateTimeField(default=timezone.now)
-    vkId = models.IntegerField(verbose_name="VK id", blank=True, null=True, unique=True)
+    vk_id = models.IntegerField(
+        verbose_name="VK id", blank=True, null=True, unique=True
+    )
     unreadActivityCount = models.IntegerField(default=0)
     telegram_id = models.IntegerField(
         verbose_name="Telegram ID", null=True, unique=True, blank=True

@@ -140,7 +140,7 @@ class BoecSeasons(RevisionMixin, viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        return Season.objects.filter(boec=self.kwargs["boec_pk"], isAccepted=True)
+        return Season.objects.filter(boec=self.kwargs["boec_pk"], is_accepted=True)
 
 
 class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
@@ -150,7 +150,7 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         event_participant = Participant.objects.filter(
-            boec=self.kwargs["boec_pk"], isApproved=True
+            boec=self.kwargs["boec_pk"], is_approved=True
         )
         competition_participant = CompetitionParticipant.objects.filter(
             boec=self.kwargs["boec_pk"], worth=1
@@ -164,15 +164,15 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
         )
         return Response(
             {
-                "event_participant": participant_serializer.data,
-                "competition_participant": competition_participant_serializer.data,
+                "eventParticipant": participant_serializer.data,
+                "competitionParticipant": competition_participant_serializer.data,
             }
         )
 
 
 def generate_boec_progress(boec: Boec):
     event_participant = boec.event_participation.filter(
-        isApproved=True, event__status=1
+        is_approved=True, event__status=1
     )
     participation_default = event_participant.filter(worth=0).count()
     participation_volonteer = event_participant.filter(worth=1).count()
@@ -196,15 +196,15 @@ def generate_boec_progress(boec: Boec):
     seasons = boec.seasons.filter(is_candidate=False, is_accepted=True).count()
 
     return {
-        "participation_count": participation_default,
-        "volonteer_count": participation_volonteer,
-        "organizer_count": participation_organizer,
-        "competition_default": competition_default,
-        "competition_playoff": competition_playoff,
+        "participationCount": participation_default,
+        "volonteerCount": participation_volonteer,
+        "organizerCount": participation_organizer,
+        "competitionDefault": competition_default,
+        "competitionPlayoff": competition_playoff,
         "nominations": nominations_count,
         "seasons": seasons,
-        "sport_wins": sport_wins,
-        "art_wins": art_wins,
+        "sportWins": sport_wins,
+        "artWins": art_wins,
     }
 
 

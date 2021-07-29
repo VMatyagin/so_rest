@@ -20,7 +20,7 @@ class PublicUserApiTests(TestCase):
 
     def test_create_valid_user_success(self):
         """test creating user with valid payload is successful"""
-        payload = {"vkId": "test", "name": "test name"}
+        payload = {"vk_id": "test", "name": "test name"}
         res = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
@@ -29,7 +29,7 @@ class PublicUserApiTests(TestCase):
 
     def test_user_exists(self):
         """test creating user that already exists"""
-        payload = {"vkId": "test"}
+        payload = {"vk_id": "test"}
         create_user(**payload)
 
         res = self.client.post(CREATE_USER_URL, payload)
@@ -47,7 +47,7 @@ class PrivateUserApiTest(TestCase):
     """test api request thay require auth"""
 
     def setUp(self):
-        self.user = create_user(vkId="test", name="name")
+        self.user = create_user(vk_id="test", name="name")
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
@@ -58,7 +58,7 @@ class PrivateUserApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(
             res.data,
-            {"id": self.user.id, "vkId": self.user.vkId, "name": self.user.name},
+            {"id": self.user.id, "vk_id": self.user.vk_id, "name": self.user.name},
         )
 
     def test_post_me_not_allowed(self):

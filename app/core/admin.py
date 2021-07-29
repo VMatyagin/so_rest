@@ -49,7 +49,7 @@ class LoginForm(AdminAuthenticationForm):
         username = self.cleaned_data.get("username")
 
         if username is not None:
-            self.user_cache = authenticate(self.request, vkId=username)
+            self.user_cache = authenticate(self.request, vk_id=username)
             logger.error(self.user_cache is None)
             if self.user_cache is None:
                 raise self.get_invalid_login_error()

@@ -20,17 +20,17 @@ class Command(BaseCommand):
     """Parse JSON file and load data to DB"""
 
     def handle(self, *args, **options):
-        users = User.objects.filter(vkId__isnull=False)
+        users = User.objects.filter(vk_id__isnull=False)
 
         vk_ids = []
 
         for user in users:
-            check_url = f"https://api.vk.com/method/apps.isNotificationsAllowed?user_id={user.vkId}&access_token={secret}&v=5.131"
+            check_url = f"https://api.vk.com/method/apps.isNotificationsAllowed?user_id={user.vk_id}&access_token={secret}&v=5.131"
             r = requests.get(check_url)
             if r.status_code == 200:
                 data = r.json()
                 if data["response"].get("is_allowed", False) == True:
-                    vk_ids.append(str(user.vkId))
+                    vk_ids.append(str(user.vk_id))
 
         if len(vk_ids) > 0:
             list = chunks(vk_ids, 100)

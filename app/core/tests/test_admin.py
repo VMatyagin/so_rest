@@ -9,11 +9,11 @@ class AdminSiteTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.admin_user = get_user_model().objects.create_superuser(
-            vkId="test@test.com", password=str(uuid.uuid4())
+            vk_id="test@test.com", password=str(uuid.uuid4())
         )
         self.client.force_login(self.admin_user)
         self.user = get_user_model().objects.create_user(
-            vkId="test", name="test user full name"
+            vk_id="test", name="test user full name"
         )
 
     def test_users_listed(self):
@@ -22,7 +22,7 @@ class AdminSiteTests(TestCase):
         res = self.client.get(url)
 
         self.assertContains(res, self.user.name)
-        self.assertContains(res, self.user.vkId)
+        self.assertContains(res, self.user.vk_id)
 
     def test_user_change_page(self):
         """test that user edit page works"""

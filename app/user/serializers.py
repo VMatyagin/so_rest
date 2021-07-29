@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_editable_shtabs(self, obj):
         shtabs = Shtab.objects.filter(
             positions__to_date__isnull=True,
-            positions__boec__vk_ud=obj.vk_id,
+            positions__boec__vk_id=obj.vk_id,
         ).distinct()
 
         serializer = ShtabSerializer(shtabs, many=True, fields=("id", "title"))
@@ -93,7 +93,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AuthTokenSerializer(serializers.Serializer):
     """serializer for the user authentication object"""
 
-    vkId = serializers.IntegerField()
+    vk_id = serializers.IntegerField()
     # password = serializers.CharField(
     #     style={'input_type': 'password'},
     #     trim_whitespace=False
@@ -101,7 +101,7 @@ class AuthTokenSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """validate and authenticate the user"""
-        vk_id = attrs.get("vkId")
+        vk_id = attrs.get("vk_id")
         # password = attrs.get('password')
 
         user = PasswordlessAuthBackend().authenticate(

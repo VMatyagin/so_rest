@@ -80,11 +80,11 @@ class VKAuthentication(BaseAuthentication):
         if not is_sign_validated:
             raise exceptions.AuthenticationFailed(_("Sign is not valid."))
         try:
-            user = get_user_model().objects.get(vkId=query_params.get("vk_user_id"))
+            user = get_user_model().objects.get(vk_id=query_params.get("vk_user_id"))
             if not user.is_active:
                 raise exceptions.AuthenticationFailed(_("User inactive or deleted."))
         except get_user_model().DoesNotExist:
-            user = get_user_model().objects.create(vkId=query_params.get("vk_user_id"))
+            user = get_user_model().objects.create(vk_id=query_params.get("vk_user_id"))
 
         return (user, query_params.get("vk_user_id"))
 

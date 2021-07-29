@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
         for user in users:
             try:
-                boec = Boec.objects.get(vkId=user.vkId)
+                boec = Boec.objects.get(vk_id=user.vk_id)
             except (Boec.DoesNotExist):
                 continue
 

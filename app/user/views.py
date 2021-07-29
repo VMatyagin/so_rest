@@ -46,7 +46,7 @@ class ActivityView(RevisionMixin, viewsets.GenericViewSet):
 
     def retrieve(self, request, pk=None):
         try:
-            boec = Boec.objects.get(vkId=self.request.user.vkId)
+            boec = Boec.objects.get(vk_id=self.request.user.vk_id)
 
             seen = self.request.query_params.get("seen", False)
             activities = Activity.objects.filter(boec=boec, seen=bool(seen)).order_by(

@@ -11,6 +11,7 @@ from core.models import (
     Participant,
     Season,
     Ticket,
+    TicketScan,
     UsedTicketScanException,
     Warning,
 )
@@ -427,3 +428,17 @@ class TicketViewSet(
         last_valid_scan.is_final = False
         last_valid_scan.save()
         return Response({})
+
+
+class TicketScanViewSet(
+    RevisionMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = serializers.TicketScanSerializer
+    authentication_classes = (VKAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = TicketScan.objects.filter(is_final=True)
+        return queryset

@@ -37,6 +37,7 @@ event_participants_router.register(
 )
 
 router.register(r"tickets", views.TicketViewSet, basename="tickets")
+router.register(r"scans", views.TicketScanViewSet, basename="scans")
 
 app_name = "event"
 

@@ -11,6 +11,7 @@ from core.models import (
     Season,
     Shtab,
     Ticket,
+    TicketScan,
 )
 from core.serializers import DynamicFieldsModelSerializer
 from django.utils.translation import ugettext_lazy as _
@@ -320,6 +321,22 @@ class TicketSerializer(DynamicFieldsModelSerializer):
             "uuid",
             "boec",
             "event",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("id",)
+
+
+class TicketScanSerializer(DynamicFieldsModelSerializer):
+    """Serializer for ticket scans"""
+
+    ticket = TicketSerializer(read_only=True)
+
+    class Meta:
+        model = TicketScan
+        fields = (
+            "ticket",
+            "is_final",
             "created_at",
             "updated_at",
         )

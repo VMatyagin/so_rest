@@ -7,6 +7,7 @@ from core.models import (
     Competition,
     CompetitionParticipant,
     Event,
+    EventQuota,
     Nomination,
     Participant,
     Season,
@@ -441,4 +442,15 @@ class TicketScanViewSet(
 
     def get_queryset(self):
         queryset = TicketScan.objects.filter(is_final=True)
+        return queryset
+
+
+class EventQuotaViewSet(RevisionMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = serializers.EventQuotaSerializer
+
+    authentication_classes = (VKAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = EventQuota.objects.all()
         return queryset

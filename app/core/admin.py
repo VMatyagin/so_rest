@@ -101,6 +101,10 @@ class EventAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):
     inlines = [StateLogInline]
 
 
+class EventQuotaAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
 class ActivePositionFilter(admin.SimpleListFilter):
     title = _("Действующий")
     parameter_name = "to_date"
@@ -179,3 +183,4 @@ admin.site.register(models.TicketScan, TicketScanAdmin)
 admin.site.register(models.Achievement, AchievementsAdmin)
 admin.site.register(models.Activity, ActivityAdmin)
 admin.site.register(models.Warning, WarningAdmin)
+admin.site.register(models.EventQuota, EventQuotaAdmin)

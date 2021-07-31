@@ -341,3 +341,15 @@ class TicketScanSerializer(DynamicFieldsModelSerializer):
             "updated_at",
         )
         read_only_fields = ("id",)
+
+
+class EventQuotaSerializer(DynamicFieldsModelSerializer):
+    """Serializer for event quotas"""
+
+    event = EventSerializer(read_only=True)
+    boec = BoecInfoSerializer(read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = ("id", "boec", "event", "count")
+        read_only_fields = ("id",)

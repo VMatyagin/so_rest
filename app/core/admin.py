@@ -103,7 +103,7 @@ class EventAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):
 
 class ActivePositionFilter(admin.SimpleListFilter):
     title = _("Действующий")
-    parameter_name = "toDate"
+    parameter_name = "to_date"
 
     def lookups(self, request, model_admin):
         return (("0", _("Действующий")), ("1", _("Не действующий")))

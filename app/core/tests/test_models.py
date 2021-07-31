@@ -64,7 +64,7 @@ class ModelTests(TestCase):
 
     def test_event_str(self):
         """test the event representation"""
-        event = models.Event.objects.create(status=0, title="example name")
+        event = models.Event.objects.create(state=0, title="example name")
 
         self.assertEqual(str(event), event.title)
 

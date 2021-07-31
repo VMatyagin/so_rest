@@ -43,8 +43,8 @@ class PrivateEventApiTest(TestCase):
 
     def test_retrieve_event_list(self):
         """test retrieve event"""
-        Event.objects.create(status=0, title="test name")
-        Event.objects.create(status=0, title="Atest name")
+        Event.objects.create(state=Event.EventState.CREATED, title="test name")
+        Event.objects.create(state=Event.EventState.CREATED, title="Atest name")
 
         res = self.client.get(EVENT_URL)
 
@@ -56,7 +56,7 @@ class PrivateEventApiTest(TestCase):
 
     def test_create_event_successful(self):
         """test creating a new event"""
-        payload = {"status": 0, "title": "namw"}
+        payload = {"state": Event.EventState.CREATED, "title": "namw"}
         self.client.post(EVENT_URL, payload)
         exists = Event.objects.filter(title=payload["title"]).exists()
         self.assertTrue(exists)

@@ -53,7 +53,7 @@ class EventSerializer(DynamicFieldsModelSerializer):
         model = Event
         fields = (
             "id",
-            "status",
+            "state",
             "title",
             "description",
             "location",

@@ -209,7 +209,11 @@ class Event(models.Model):
         default=EventWorth.UNSET,
         verbose_name="Ценность блоков",
     )
-    state = FSMIntegerField(default=EventState.CREATED)
+    state = FSMIntegerField(
+        default=EventState.CREATED,
+        choices=EventState.choices,
+        verbose_name="Статус мероприятия",
+    )
     title = models.CharField(max_length=255, verbose_name="Название")
     description = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Описание"

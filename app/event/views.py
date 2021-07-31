@@ -81,9 +81,9 @@ class EventViewSet(
 
     def perform_update(self, serializer):
         event = self.get_object()
-        status = serializer.validated_data.get("status", None)
+        state = serializer.validated_data.get("state", None)
 
-        if status == 1:
+        if state == Event.EventState.PASSED:
             Thread(target=self.iterate_over_boecs, args=(event,)).start()
 
         return super().perform_update(serializer)

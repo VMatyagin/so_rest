@@ -4,4 +4,12 @@ from invoke import Context, task
 @task
 def setenv(c):
     ctx: Context = c
-    ctx.run("while read v; do export $v ; done < .env")
+    with open(".env") as f:
+        for var in f.readlines():
+            ctx.run(f"export {var}")
+
+
+@task
+def db(c):
+    ctx: Context = c
+    ctx.run("docker compose up db")

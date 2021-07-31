@@ -1,5 +1,6 @@
 import os
 import uuid
+from enum import Enum
 
 import reversion
 from django.contrib.auth.models import (
@@ -11,6 +12,7 @@ from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django_fsm import FSMField, FSMIntegerField, transition
 from rest_framework.exceptions import ValidationError
 
 
@@ -187,6 +189,16 @@ class Event(models.Model):
         PASSED = 1, _("Мероприятие прошло")
         NOT_PASSED = 2, _("Мероприятие не прошло")
 
+    class EventState(models.IntegerChoices):
+        CREATED = 0, _("Мероприятие создано")
+        QUOTA_CALCULATION = 1, _("Расчёт квот")
+        QUOTA_DISTRIBUTION = 2, _("Распределение квот")
+        REGISTRATION = 3, _("Регистрация желающих")
+        REGISTRATION_COMPLETE = 4, _("Регистрация окончена")
+        TICKETS_GENERATED = 5, _("Билеты сгенерированы")
+        PASSED = 6, _("Мероприятие прошло")
+        CANCELLED = 7, _("Мероприятие отменено")
+
     status = models.IntegerField(
         choices=EventStatus.choices,
         default=EventStatus.JUST_CREATED,
@@ -197,6 +209,7 @@ class Event(models.Model):
         default=EventWorth.UNSET,
         verbose_name="Ценность блоков",
     )
+    state = FSMIntegerField(default=EventState.CREATED)
     title = models.CharField(max_length=255, verbose_name="Название")
     description = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Описание"
@@ -217,6 +230,57 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+    @transition(
+        field=state, source=EventState.CREATED, target=EventState.QUOTA_CALCULATION
+    )
+    def start_quota_calc(self):
+        pass
+
+    @transition(
+        field=state,
+        source=EventState.QUOTA_CALCULATION,
+        target=EventState.QUOTA_DISTRIBUTION,
+    )
+    def start_quota_distribution(self):
+        pass
+
+    @transition(
+        field=state,
+        source=EventState.QUOTA_DISTRIBUTION,
+        target=EventState.REGISTRATION,
+    )
+    def start_registration(self):
+        pass
+
+    @transition(
+        field=state,
+        source=EventState.REGISTRATION,
+        target=EventState.REGISTRATION_COMPLETE,
+    )
+    def complete_registration(self):
+        pass
+
+    @transition(
+        field=state,
+        source=EventState.REGISTRATION_COMPLETE,
+        target=EventState.TICKETS_GENERATED,
+        conditions=[is_ticketed],
+    )
+    def generate_tickets(self):
+        pass
+
+    @transition(
+        field=state,
+        source=[EventState.REGISTRATION_COMPLETE, EventState.TICKETS_GENERATED],
+        target=EventState.PASSED,
+    )
+    def complete(self):
+        pass
+
+    @transition(field=state, source="+", target=EventState.CANCELLED)
+    def cancel(self):
+        pass
 
 
 class UsedTicketScanException(RuntimeError):
@@ -258,10 +322,10 @@ class Ticket(models.Model):
         return self.ticket_scans.filter(isFinal=True).exists()
 
     def last_scan(self) -> "TicketScan":
-        return self.ticket_scans.order_by("createdAt").last()
+        return self.ticket_scans.order_by("created_at").last()
 
     def last_valid_scan(self) -> "TicketScan":
-        return self.ticket_scans.filter(isFinal=True).order_by("createdAt").last()
+        return self.ticket_scans.filter(isFinal=True).order_by("created_at").last()
 
     def scan(self):
         if self.is_used:

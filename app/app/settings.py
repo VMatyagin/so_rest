@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     "reversion",  # https://github.com/etianen/django-reversion
     "reversion_compare",  # https://github.com/jedie/django-reversion-compare
     "rest_framework_swagger",
+    "django_fsm",
+    "fsm_admin",
+    "django_fsm_log",
     "drf_yasg",
     "django_admin_listfilter_dropdown",
     "core",

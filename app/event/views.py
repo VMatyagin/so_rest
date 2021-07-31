@@ -405,7 +405,7 @@ class TicketViewSet(
             return Response(
                 {
                     "error": "Ticket already scanned",
-                    "scannedAt": ticket.last_valid_scan().createdAt,
+                    "scannedAt": ticket.last_valid_scan().created_at,
                 }
             )
         return Response(

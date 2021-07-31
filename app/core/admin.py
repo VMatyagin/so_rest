@@ -10,6 +10,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UsernameField
 from django.utils.translation import gettext as _
 from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter
+from django_fsm_log.admin import StateLogInline
+from fsm_admin.mixins import FSMTransitionMixin
 from reversion_compare.admin import CompareVersionAdmin
 
 authenticate = PasswordlessAuthBackend.authenticate
@@ -95,8 +97,8 @@ class BrigadeAdmin(CompareVersionAdmin, admin.ModelAdmin):
     pass
 
 
-class EventAdmin(CompareVersionAdmin, admin.ModelAdmin):
-    pass
+class EventAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):
+    inlines = [StateLogInline]
 
 
 class ActivePositionFilter(admin.SimpleListFilter):

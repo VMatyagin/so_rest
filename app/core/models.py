@@ -1,6 +1,9 @@
+import datetime
+import functools
 import os
 import uuid
 from enum import Enum
+from typing import Optional
 
 import reversion
 from django.contrib.auth.models import (
@@ -167,12 +170,22 @@ class Brigade(models.Model):
     def __str__(self):
         return self.title
 
+    def last_season_people_count(self) -> int:
+        target_year = (
+            datetime.date.today().year
+            if datetime.date.today().month >= 9
+            else datetime.date.today().year - 1
+        )
+        return self.seasons.filter(
+            is_accepted=True, is_candidate=False, year=target_year
+        ).count()
+
 
 class EventWorth(models.IntegerChoices):
     UNSET = 0, _("Не учитывается")
     ART = 1, _("Творчество")
     SPORT = 2, _("Спорт")
-    VOLONTEER = 3, _("Волонтерство")
+    VOLUNTEER = 3, _("Волонтерство")
     CITY = 4, _("Городское")
 
 
@@ -275,9 +288,48 @@ class Event(models.Model):
     def complete(self):
         pass
 
-    @transition(field=state, source="+", target=EventState.CANCELLED)
+    @transition(
+        field=state,
+        source="+",
+        target=EventState.CANCELLED,
+        custom={"button_name": "Отменить мероприятие"},
+    )
     def cancel(self):
         pass
+
+    def distribute_quotas(
+        self,
+        total_count: int,
+        candidates_accepted: bool = False,
+        shtab_id: Optional[int] = None,
+        area_id: Optional[int] = None,
+    ) -> None:
+        # TODO process candidates_accepted
+
+        if self.state != self.EventState.QUOTA_CALCULATION:
+            raise ValueError(
+                "Can't distribute quotas unless the event is in quota_calculation state"
+            )
+
+        if shtab_id is not None and area_id is not None:
+            raise ValueError("Can't limit quotas to Shtab and Area simultaneously")
+
+        if shtab_id is not None:
+            brigades = Brigade.objects.get(shtab_id=shtab_id)
+        elif area_id is not None:
+            brigades = Brigade.objects.get(area_id=area_id)
+        else:
+            brigades = Brigade.objects.all()
+
+        total_season_people_count = sum(
+            [brigade.last_season_people_count() for brigade in brigades]
+        )
+        ratio = total_count / total_season_people_count
+        self.quotes.delete()
+        for brigade in brigades:
+            self.quotes.create(
+                brigade=brigade, count=brigade.last_season_people_count() * ratio
+            )
 
 
 class UsedTicketScanException(RuntimeError):
@@ -316,18 +368,18 @@ class Ticket(models.Model):
     @property
     def is_used(self) -> bool:
         """Checks whether there's a final ticket scan for this ticket"""
-        return self.ticket_scans.filter(isFinal=True).exists()
+        return self.ticket_scans.filter(is_final=True).exists()
 
     def last_scan(self) -> "TicketScan":
         return self.ticket_scans.order_by("created_at").last()
 
     def last_valid_scan(self) -> "TicketScan":
-        return self.ticket_scans.filter(isFinal=True).order_by("created_at").last()
+        return self.ticket_scans.filter(is_final=True).order_by("created_at").last()
 
     def scan(self):
         if self.is_used:
             raise UsedTicketScanException("Ticket has already been used")
-        self.ticket_scans.create(isFinal=True)
+        self.ticket_scans.create(is_final=True)
 
     def __str__(self) -> str:
         return f"{self.boec} - {self.event}"
@@ -645,7 +697,7 @@ class Warning(models.Model):
 
 @reversion.register()
 class Achievement(models.Model):
-    """NotificaAchievementtions model"""
+    """Achievement model"""
 
     class Meta:
         verbose_name = "Достижение"

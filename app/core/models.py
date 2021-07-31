@@ -488,6 +488,36 @@ class Participant(models.Model):
 
 
 @reversion.register()
+class EventQuota(models.Model):
+    """Number quotas for event participation for a brigade"""
+
+    class Meta:
+        verbose_name = "Квота отряда"
+        verbose_name_plural = "Квоты отрядов"
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        verbose_name="Мероприятие",
+        related_name="quotes",
+    )
+
+    brigade = models.ForeignKey(
+        Brigade,
+        on_delete=models.RESTRICT,
+        verbose_name="Отряд",
+        null=True,
+        blank=True,
+    )
+
+    count = models.IntegerField(verbose_name="Количество мест", null=True, default=None)
+
+    def __str__(self):
+        quote_count = f"квот: {self.count}" if self.count is not None else "квот нет"
+        return f"{self.brigade} - {self.event}, {quote_count}"
+
+
+@reversion.register()
 class Competition(models.Model):
     """Competition  model"""
 

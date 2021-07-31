@@ -184,11 +184,6 @@ class Event(models.Model):
         verbose_name = "Мероприятие"
         verbose_name_plural = "Мероприятия"
 
-    class EventStatus(models.IntegerChoices):
-        JUST_CREATED = 0, _("Мероприятие создано")
-        PASSED = 1, _("Мероприятие прошло")
-        NOT_PASSED = 2, _("Мероприятие не прошло")
-
     class EventState(models.IntegerChoices):
         CREATED = 0, _("Мероприятие создано")
         QUOTA_CALCULATION = 1, _("Расчёт квот")
@@ -200,9 +195,7 @@ class Event(models.Model):
         CANCELLED = 7, _("Мероприятие отменено")
 
     status = models.IntegerField(
-        choices=EventStatus.choices,
-        default=EventStatus.JUST_CREATED,
-        verbose_name="Статус мероприятия",
+        verbose_name="Статус мероприятия (deprecated)",
     )
     worth = models.IntegerField(
         choices=EventWorth.choices,

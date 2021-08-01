@@ -178,7 +178,9 @@ class Brigade(models.Model):
         choices=BrigadeState.choices,
         verbose_name="Статус отряда",
     )
-    last_festival_state = models.CharField(choices=BrigadeState.choices, null=True)
+    last_festival_state = models.CharField(
+        choices=BrigadeState.choices, null=True, max_length=255
+    )
 
     def __str__(self):
         return self.title

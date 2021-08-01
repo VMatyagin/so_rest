@@ -13,6 +13,7 @@ from django.contrib.auth.models import (
 )
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
+from django.db.models import TextChoices
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, FSMIntegerField, transition
@@ -167,10 +168,36 @@ class Brigade(models.Model):
     created_at = models.DateField(default=timezone.now)
     updated_at = AutoDateTimeField(default=timezone.now)
 
+    class BrigadeState(TextChoices):
+        CANDIDATE = "candidate", _("Кандидатский")
+        MEMBER = "member", _("Действующий")
+        DEAD = "dead", _("Мёртвый")
+
+    state = FSMField(
+        default=BrigadeState.CANDIDATE,
+        choices=BrigadeState.choices,
+        verbose_name="Статус отряда",
+    )
+    last_festival_state = models.CharField(choices=BrigadeState.choices, null=True)
+
     def __str__(self):
         return self.title
 
+    @transition(field=state, source="+", target=BrigadeState.MEMBER)
+    def accept(self):
+        pass
+
+    @transition(field=state, source="+", target=BrigadeState.DEAD)
+    def kill(self):
+        pass
+
+    @transition(field=state, source="+", target=BrigadeState.CANDIDATE)
+    def unaccept(self):
+        pass
+
     def last_season_people_count(self) -> int:
+        # Starting from september target year = current year
+        # Previous year otherwise
         target_year = (
             datetime.date.today().year
             if datetime.date.today().month >= 9

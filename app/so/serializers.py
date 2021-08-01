@@ -122,7 +122,7 @@ class BrigadeSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Brigade
-        fields = ("id", "title", "shtab", "area", "date_of_birth")
+        fields = ("id", "title", "shtab", "area", "date_of_birth", "state")
         read_only_fields = ("id",)
 
 

@@ -93,8 +93,8 @@ class BoecAdmin(CompareVersionAdmin, admin.ModelAdmin):
     search_fields = ("last_name", "first_name")
 
 
-class BrigadeAdmin(CompareVersionAdmin, admin.ModelAdmin):
-    pass
+class BrigadeAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):
+    inlines = [StateLogInline]
 
 
 class EventAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):

@@ -2,30 +2,26 @@
 
 state "Created" as created
 state "Quota Calculation" as quota_calc
-state "Quota Distribution" as quota_distrib
 state "Registration" as registration
 state "Registration Complete" as registration_complete
 state "Tickets Generated" as tickets_generated
-state "Event Happened" as happened
-state "Event Cancelled" as cancelled
+state "Passed" as passed
+state "Cancelled" as cancelled
 
 [*] --> created
 created --> quota_calc
 quota_calc --> created
-quota_calc --> quota_distrib
-quota_distrib --> quota_calc
-quota_distrib --> registration
-registration --> quota_distrib
+quota_calc --> registration
+registration --> quota_calc
 registration --> registration_complete
 registration_complete --> registration
 registration_complete --> tickets_generated : Generate tickets
 tickets_generated --> registration_complete
-tickets_generated --> happened
-happened --> tickets_generated
+tickets_generated --> passed
+passed --> tickets_generated
 
 created --> cancelled
 quota_calc --> cancelled
-quota_distrib --> cancelled
 registration --> cancelled
 registration_complete --> cancelled
 tickets_generated --> cancelled

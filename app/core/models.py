@@ -200,16 +200,13 @@ class Event(models.Model):
     class EventState(models.IntegerChoices):
         CREATED = 0, _("Мероприятие создано")
         QUOTA_CALCULATION = 1, _("Расчёт квот")
-        QUOTA_DISTRIBUTION = 2, _("Распределение квот")
+        # QUOTA_DISTRIBUTION = 2, _("Распределение квот") # Not used
         REGISTRATION = 3, _("Регистрация желающих")
         REGISTRATION_COMPLETE = 4, _("Регистрация окончена")
         TICKETS_GENERATED = 5, _("Билеты сгенерированы")
         PASSED = 6, _("Мероприятие прошло")
         CANCELLED = 7, _("Мероприятие отменено")
 
-    status = models.IntegerField(
-        verbose_name="Статус мероприятия (deprecated)",
-    )
     worth = models.IntegerField(
         choices=EventWorth.choices,
         default=EventWorth.UNSET,
@@ -250,14 +247,6 @@ class Event(models.Model):
     @transition(
         field=state,
         source=EventState.QUOTA_CALCULATION,
-        target=EventState.QUOTA_DISTRIBUTION,
-    )
-    def start_quota_distribution(self):
-        pass
-
-    @transition(
-        field=state,
-        source=EventState.QUOTA_DISTRIBUTION,
         target=EventState.REGISTRATION,
     )
     def start_registration(self):

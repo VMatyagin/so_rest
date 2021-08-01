@@ -322,8 +322,6 @@ class Event(models.Model):
         shtab_id: Optional[int] = None,
         area_id: Optional[int] = None,
     ) -> None:
-        # TODO process candidates_accepted
-
         if self.state != self.EventState.QUOTA_CALCULATION:
             raise ValueError(
                 "Can't distribute quotas unless the event is in quota_calculation state"
@@ -332,18 +330,28 @@ class Event(models.Model):
         if shtab_id is not None and area_id is not None:
             raise ValueError("Can't limit quotas to Shtab and Area simultaneously")
 
+        allowed_brigade_states = [Brigade.BrigadeState.MEMBER]
+        if candidates_accepted:
+            allowed_brigade_states.append(Brigade.BrigadeState.CANDIDATE)
+
         if shtab_id is not None:
-            brigades = Brigade.objects.get(shtab_id=shtab_id)
+            brigades = Brigade.objects.get(
+                shtab_id=shtab_id, state__in=[allowed_brigade_states]
+            )
         elif area_id is not None:
-            brigades = Brigade.objects.get(area_id=area_id)
+            brigades = Brigade.objects.get(
+                area_id=area_id, state__in=[allowed_brigade_states]
+            )
         else:
-            brigades = Brigade.objects.all()
+            brigades = Brigade.objects.all(state__in=[allowed_brigade_states])
 
         total_season_people_count = sum(
             [brigade.last_season_people_count() for brigade in brigades]
         )
         ratio = total_count / total_season_people_count
+
         self.quotes.delete()
+
         for brigade in brigades:
             self.quotes.create(
                 brigade=brigade, count=brigade.last_season_people_count() * ratio

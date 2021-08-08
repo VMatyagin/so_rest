@@ -6,6 +6,7 @@ from core.models import (
     Competition,
     CompetitionParticipant,
     Event,
+    EventQuota,
     Nomination,
     Participant,
     Season,
@@ -350,6 +351,6 @@ class EventQuotaSerializer(DynamicFieldsModelSerializer):
     boec = BoecInfoSerializer(read_only=True)
 
     class Meta:
-        model = Ticket
+        model = EventQuota
         fields = ("id", "boec", "event", "count")
         read_only_fields = ("id",)

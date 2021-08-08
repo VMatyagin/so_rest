@@ -147,6 +147,7 @@ class BoecParticipantHistory(RevisionMixin, viewsets.GenericViewSet):
     authentication_classes = (VKAuthentication,)
     permission_classes = (IsAuthenticated,)
     pagination_class = None
+    serializer_class = ParticipantHistorySerializer
 
     def list(self, request, *args, **kwargs):
         event_participant = Participant.objects.filter(

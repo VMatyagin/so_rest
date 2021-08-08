@@ -113,6 +113,9 @@ class EventViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def generate_tickets(self, request, pk):
+        """
+        Generate tickets for all approved requests
+        """
         event = Event.objects.get(id=pk)
         if not event.isTicketed:
             raise ValueError(f"Event {event} is not ticketed")
@@ -148,6 +151,9 @@ class EventViewSet(
         authentication_classes=(VKAuthentication,),
     )
     def generate_quotas(self, request, pk):
+        """
+        Initiate quota distribution
+        """
         event = Event.objects.get(id=pk)
 
         total_count = self.request.query_params.get("total_count")

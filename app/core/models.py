@@ -3,7 +3,7 @@ import functools
 import os
 import uuid
 from enum import Enum
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import reversion
 from django.contrib.auth.models import (
@@ -13,7 +13,7 @@ from django.contrib.auth.models import (
 )
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
-from django.db.models import TextChoices
+from django.db.models import Count, Q, TextChoices
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, FSMIntegerField, transition
@@ -267,6 +267,42 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    def quotas_match_participants(self) -> bool:
+        if not self.is_ticketed:
+            return True
+        approved_participants_by_brigade = Brigade.objects.annotate(
+            approved_count=Count(
+                "event_participants",
+                filter=Q(
+                    event_participants__is_approved=True,
+                    event_participants__worth=Participant.WorthEnum.DEFAULT,
+                    event_participants__event_id=self.id,
+                ),
+            )
+        )
+
+        errors: List[Dict[str, Any]] = list()
+        for brigade in approved_participants_by_brigade:
+            approved_count = approved_participants_by_brigade.approved_count
+            allowed_count = self.quotas.filter(bridage_id=brigade.id).count
+            if allowed_count < approved_count:
+                errors.append(
+                    {
+                        "brigade": brigade,
+                        "allowed": allowed_count,
+                        "approved": approved_count,
+                        "items": approved_participants_by_brigade,
+                    }
+                )
+        if len(errors) == 0:
+            return True
+        else:
+            for error in errors:
+                print(
+                    f"Brigade {error['brigade']} has {error['allowed']} quotas and {error['approved']} approved requests"
+                )
+            return False
+
     @transition(
         field=state, source=EventState.CREATED, target=EventState.QUOTA_CALCULATION
     )
@@ -285,6 +321,7 @@ class Event(models.Model):
         field=state,
         source=EventState.REGISTRATION,
         target=EventState.REGISTRATION_COMPLETE,
+        conditions=[quotas_match_participants],
     )
     def complete_registration(self):
         pass
@@ -350,10 +387,10 @@ class Event(models.Model):
         )
         ratio = total_count / total_season_people_count
 
-        self.quotes.delete()
+        self.quotas.delete()
 
         for brigade in brigades:
-            self.quotes.create(
+            self.quotas.create(
                 brigade=brigade, count=brigade.last_season_people_count() * ratio
             )
 
@@ -558,6 +595,7 @@ class Participant(models.Model):
         verbose_name="Отряд",
         null=True,
         blank=True,
+        related_name="event_participants",
     )
     is_approved = models.BooleanField(default=False)
 
@@ -577,7 +615,7 @@ class EventQuota(models.Model):
         Event,
         on_delete=models.CASCADE,
         verbose_name="Мероприятие",
-        related_name="quotes",
+        related_name="quotas",
     )
 
     brigade = models.ForeignKey(

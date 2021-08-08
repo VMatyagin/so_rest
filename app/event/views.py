@@ -69,7 +69,7 @@ class EventViewSet(
 
         return queryset
 
-    def iterate_over_boecs(event):
+    def iterate_over_boecs(self, event: Event):
         for boec in event.event_participation.all():
             refresh_boec_achievements(boec=boec)
 
@@ -138,6 +138,32 @@ class EventViewSet(
         Thread(target=reporter.create).start()
 
         return Response({})
+
+    @action(
+        methods=["post"],
+        detail=True,
+        permission_classes=(IsAuthenticated, IsAdminUser),
+        url_path="generate_quotas",
+        url_name="generate_quotas",
+        authentication_classes=(VKAuthentication,),
+    )
+    def generate_quotas(self, request, pk):
+        event = Event.objects.get(id=pk)
+
+        total_count = self.request.query_params.get("total_count")
+        candidates_accepted = (
+            self.request.query_params.get("candidates_accepted", "false") == "true"
+        )
+        shtab_id = self.request.query_params.get("shtab_id", None)
+        area_id = self.request.query_params.get("area_id", None)
+
+        event.distribute_quotas(
+            total_count=total_count,
+            candidates_accepted=candidates_accepted,
+            shtab_id=shtab_id,
+            area_id=area_id,
+        )
+        return Response()
 
 
 class EventParticipant(RevisionMixin, CreateListAndDestroyViewSet):

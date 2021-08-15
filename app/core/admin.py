@@ -95,6 +95,10 @@ class BoecAdmin(CompareVersionAdmin, admin.ModelAdmin):
 
 class BrigadeAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):
     inlines = [StateLogInline]
+    ordering = ["title"]
+    search_fields = ("title",)
+    list_filter = ("area", "shtab")
+    list_display = ["area", "title"]
 
 
 class EventAdmin(CompareVersionAdmin, FSMTransitionMixin, admin.ModelAdmin):

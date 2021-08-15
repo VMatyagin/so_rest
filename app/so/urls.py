@@ -7,7 +7,6 @@ from so.views import BoecTelegramView, BoecViewSet
 router = SimpleRouter()
 
 router.register(r"shtab", views.ShtabViewSet)
-router.register("area", views.AreaViewSet)
 router.register("boec", views.BoecViewSet)
 router.register(r"brigade", views.BrigadeViewSet)
 

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from core.authentication import VKAuthentication
 from core.models import (
@@ -15,6 +16,7 @@ from core.models import (
     Season,
     Shtab,
 )
+from django.core.exceptions import FieldDoesNotExist
 from django.utils.translation import ugettext_lazy as _
 from event.serializers import ParticipantHistorySerializer, ParticipantSerializer
 from rest_framework import filters, mixins, status, viewsets
@@ -40,19 +42,6 @@ class ShtabViewSet(RevisionMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         """Return ordered by title objects"""
         return self.queryset.order_by("title")
-
-
-class AreaViewSet(RevisionMixin, viewsets.ModelViewSet):
-    """manage shtabs in the database"""
-
-    serializer_class = serializers.AreaSerializer
-    queryset = Area.objects.all()
-    authentication_classes = (VKAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get_queryset(self):
-        """Return ordered by shortTitle objects"""
-        return self.queryset
 
 
 class BoecTelegramView(RevisionMixin, viewsets.ViewSet):
@@ -255,15 +244,17 @@ class BrigadeViewSet(RevisionMixin, viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
     filter_backends = [filters.SearchFilter]
     search_fields = ("title",)
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return serializers.BrigadeShortSerializer
-        return serializers.BrigadeSerializer
+    serializer_class = serializers.BrigadeSerializer
 
     def get_queryset(self):
         """Return ordered by title objects"""
-        return self.queryset.order_by("title")
+        sort_field = self.request.query_params.get("sort", "title")
+        try:
+            field_without_sign = re.sub(r"-", "", sort_field, count=1)
+            Brigade._meta.get_field(field_without_sign)
+        except FieldDoesNotExist:
+            sort_field = "title"
+        return self.queryset.order_by(sort_field, "title")
 
 
 class SubjectPositions(

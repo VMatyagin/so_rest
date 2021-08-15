@@ -98,52 +98,32 @@ class BoecSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "full_name")
 
 
+class AreaSerializer(serializers.ModelSerializer):
+    """serializer for area objects"""
+
+    class Meta:
+        model = Area
+        fields = (
+            "id",
+            "title",
+        )
+        read_only_fields = ("id",)
+
+
 class BrigadeSerializer(DynamicFieldsModelSerializer):
     """serializer for brigade objects"""
 
-    # past_seasons = serializers.SerializerMethodField('get_past_seasons')
-
     shtab = ShtabSerializer(read_only=True)
-    # def get_past_seasons(self, obj):
-    #     value_list = obj.seasons.values_list(
-    #         'year', flat=True
-    #     ).distinct()
-    #     group_by_value = {}
-    #     for value in value_list:
-    #         list = obj.seasons.filter(
-    #             year=value
-    #         ).only('boec')
-    #         serializer = SeasonSerializer(
-    #             list, many=True, fields=('boec', 'id'))
+    area = AreaSerializer(read_only=True)
 
-    #         group_by_value[value] = serializer.data
+    title = serializers.SerializerMethodField("get_model_title")
 
-    #     return group_by_value
+    def get_model_title(self, obj):
+        return str(obj)
 
     class Meta:
         model = Brigade
         fields = ("id", "title", "shtab", "area", "date_of_birth", "state")
-        read_only_fields = ("id",)
-
-
-class AreaSerializer(serializers.ModelSerializer):
-    """serializer for area objects"""
-
-    brigades = serializers.SerializerMethodField("get_brigades")
-
-    def get_brigades(self, obj):
-        queryset = obj.brigades.order_by("title")
-        serializer = BrigadeShortSerializer(
-            queryset,
-            many=True,
-            read_only=True,
-            context={"request": self.context["request"]},
-        )
-        return serializer.data
-
-    class Meta:
-        model = Area
-        fields = ("id", "title", "short_title", "brigades")
         read_only_fields = ("id",)
 
 

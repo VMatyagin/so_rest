@@ -160,9 +160,15 @@ class Brigade(models.Model):
         verbose_name = "Отряд"
         verbose_name_plural = "Отряды"
 
-    title = models.CharField(max_length=255)
-    area = models.ForeignKey(Area, on_delete=models.RESTRICT, related_name="brigades")
-    shtab = models.ForeignKey(Shtab, on_delete=models.RESTRICT)
+    title = models.CharField(max_length=255, verbose_name="Название")
+    custom_area_prefix = models.CharField(max_length=10, null=True, blank=True)
+    area = models.ForeignKey(
+        Area,
+        on_delete=models.RESTRICT,
+        related_name="brigades",
+        verbose_name="Направление",
+    )
+    shtab = models.ForeignKey(Shtab, on_delete=models.RESTRICT, verbose_name="Штаб")
     boec = models.ManyToManyField(Boec, blank=True, related_name="brigades")
     date_of_birth = models.DateTimeField(null=True, blank=True)
     created_at = models.DateField(default=timezone.now)
@@ -179,11 +185,16 @@ class Brigade(models.Model):
         verbose_name="Статус отряда",
     )
     last_festival_state = models.CharField(
-        choices=BrigadeState.choices, null=True, max_length=255
+        choices=BrigadeState.choices, null=True, max_length=255, blank=True
     )
 
     def __str__(self):
-        return self.title
+        area_prefix = (
+            self.custom_area_prefix
+            if self.custom_area_prefix
+            else self.area.short_title
+        )
+        return f'{area_prefix} "{self.title}"'
 
     @transition(field=state, source="+", target=BrigadeState.MEMBER)
     def accept(self):

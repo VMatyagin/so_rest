@@ -55,4 +55,5 @@ urlpatterns = [
     path("api/", include("user.urls")),
     path("api/so/", include("so.urls")),
     path("api/", include("event.urls")),
+    path("api/", include("voting.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

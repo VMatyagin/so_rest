@@ -169,6 +169,22 @@ class WarningAdmin(CompareVersionAdmin, admin.ModelAdmin):
     pass
 
 
+class VotingAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
+class VoteAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
+class VoteQuestionAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
+class VoteAnswerAdmin(CompareVersionAdmin, admin.ModelAdmin):
+    pass
+
+
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Shtab, ShtabAdmin)
 admin.site.register(models.Area, AreaAdmin)
@@ -188,3 +204,6 @@ admin.site.register(models.Achievement, AchievementsAdmin)
 admin.site.register(models.Activity, ActivityAdmin)
 admin.site.register(models.Warning, WarningAdmin)
 admin.site.register(models.EventQuota, EventQuotaAdmin)
+admin.site.register(models.Voting, VotingAdmin)
+admin.site.register(models.VoteQuestion, VoteQuestionAdmin)
+admin.site.register(models.VoteAnswer, VoteAnswerAdmin)

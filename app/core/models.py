@@ -884,3 +884,53 @@ class Activity(models.Model):
 
     def __str__(self):
         return f"{self.get_type_display()} | {self.boec} | {self.warning or self.achievement} "
+
+
+@reversion.register()
+class VoteAnswer(models.Model):
+    """VoteAnswer model"""
+
+    class Meta:
+        verbose_name = "Ответ голосования"
+        verbose_name_plural = "Ответы голосования"
+
+    created_at = models.DateField(default=timezone.now)
+    text = models.CharField(max_length=255)
+    voted = models.ManyToManyField(Boec, blank=True)
+
+    def __str__(self):
+        return self.text
+
+
+@reversion.register()
+class VoteQuestion(models.Model):
+    """VoteQuestion model"""
+
+    class Meta:
+        verbose_name = "Вопрос голосования"
+        verbose_name_plural = "Вопросы голосования"
+
+    created_at = models.DateField(default=timezone.now)
+
+    text = models.CharField(max_length=255)
+    answers = models.ManyToManyField(VoteAnswer, blank=True)
+
+    def __str__(self):
+        return self.text
+
+
+@reversion.register()
+class Voting(models.Model):
+    """Voting model"""
+
+    class Meta:
+        verbose_name = "Голосование"
+        verbose_name_plural = "Голосования"
+
+    created_at = models.DateField(default=timezone.now)
+
+    text = models.CharField(max_length=255)
+    questions = models.ManyToManyField(VoteQuestion)
+
+    def __str__(self):
+        return self.text
